@@ -1,57 +1,75 @@
 <template>
-  <div class="content">
-    <div class="content-left">
-      <div class="left-search-item">
-        <h4>景区分类</h4>
-        <a-tree :tree-data="contentData.cData" :selected-keys="contentData.selectedKeys" @select="onSelect"
-                style="min-height: 220px;">
-        </a-tree>
-      </div>
-      <div class="left-search-item"><h4>热门地区</h4>
-        <div class="tag-view tag-flex-view">
-            <span class="tag" :class="{'tag-select': contentData.selectTagId===item.id}"
-                  v-for="item in contentData.tagData" :key="item.id"
-                  @click="clickTag(item.id)">{{ item.title }}</span>
-        </div>
-      </div>
-    </div>
-    <div class="content-right">
-      <div class="top-select-view flex-view">
-        <div class="order-view">
-          <span class="title"></span>
-          <span class="tab"
-                :class="contentData.selectTabIndex===index? 'tab-select':''"
-                v-for="(item,index) in contentData.tabData"
-                :key="index"
-                @click="selectTab(index)">
-            {{ item }}
-          </span>
-          <span :style="{left: contentData.tabUnderLeft + 'px'}" class="tab-underline"></span>
-        </div>
-      </div>
-      <a-spin :spinning="contentData.loading" style="min-height: 200px;">
-        <div class="pc-thing-list flex-view">
-          <div v-for="item in contentData.pageData" :key="item.id" @click="handleDetail(item)"
-               class="thing-item item-column-3"><!---->
-            <div class="img-view">
-              <img :src="item.cover"></div>
-            <div class="info-view">
-              <h3 class="thing-name">{{ item.title.substring(0, 12) }}</h3>
-              <span>
-                <span class="a-price">{{ item.level }}级 - {{ item.price }}元/人 - 余票数：{{item.repertory}}</span>
-              </span>
-            </div>
+  <div class="page-container">
+    <div class="history-banner">
+      <div class="overlay">
+        <div class="text-wrapper">
+          <span class="tag">【 国家重点文物保护单位 】</span>
+          <h1 class="history-title">孙中山故居纪念馆</h1>
+          <p class="history-desc">
+            始于翠亨，见证共和。<br/>
+            踏入这座融合中西风格的红楼，品读香山少年的壮志雄心，领略伟人忧国忧民的情怀。
+          </p>
+          <div class="action-group">
+            <button class="cultural-btn primary-btn">开启寻根之旅</button>
+            <button class="cultural-btn ghost-btn">查看全景导览</button>
           </div>
-          <div v-if="contentData.pageData.length <= 0 && !contentData.loading" class="no-data" style="">暂无数据</div>
         </div>
-      </a-spin>
-      <div class="page-view" style="">
-        <a-pagination v-model="contentData.page" size="small" @change="changePage" :hideOnSinglePage="true"
-                      :defaultPageSize="contentData.pageSize" :total="contentData.total" :showSizeChanger="false"/>
       </div>
     </div>
 
-    <div style="position: fixed; bottom: 10px; right: 10px">
+    <div class="content">
+      <div class="content-left">
+        <div class="left-search-item">
+          <h4>文化印记</h4>
+          <a-tree :tree-data="contentData.cData" :selected-keys="contentData.selectedKeys" @select="onSelect"
+                  style="min-height: 220px;">
+          </a-tree>
+        </div>
+        <div class="left-search-item"><h4>非遗与特色</h4>
+          <div class="tag-view tag-flex-view">
+              <span class="tag" :class="{'tag-select': contentData.selectTagId===item.id}"
+                    v-for="item in contentData.tagData" :key="item.id"
+                    @click="clickTag(item.id)">{{ item.title }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="content-right">
+        <div class="top-select-view flex-view">
+          <div class="order-view">
+            <span class="title"></span>
+            <span class="tab"
+                  :class="contentData.selectTabIndex===index? 'tab-select':''"
+                  v-for="(item,index) in contentData.tabData"
+                  :key="index"
+                  @click="selectTab(index)">
+              {{ item }}
+            </span>
+            <span :style="{left: contentData.tabUnderLeft + 'px'}" class="tab-underline"></span>
+          </div>
+        </div>
+        <a-spin :spinning="contentData.loading" style="min-height: 200px;">
+          <div class="pc-thing-list flex-view">
+            <div v-for="item in contentData.pageData" :key="item.id" @click="handleDetail(item)"
+                 class="thing-item item-column-3">
+              <div class="img-view">
+                <img :src="item.cover">
+              </div>
+              <div class="info-view">
+                <h3 class="thing-name">{{ item.title.substring(0, 12) }}</h3>
+                <span class="a-price-wrapper">
+                  <span class="a-price">评分 {{ item.level }}级 | ￥{{ item.price }} | 余票：{{item.repertory}}</span>
+                </span>
+              </div>
+            </div>
+            <div v-if="contentData.pageData.length <= 0 && !contentData.loading" class="no-data">暂无历史文旅数据</div>
+          </div>
+        </a-spin>
+        <div class="page-view">
+          <a-pagination v-model="contentData.page" size="small" @change="changePage" :hideOnSinglePage="true"
+                        :defaultPageSize="contentData.pageSize" :total="contentData.total" :showSizeChanger="false"/>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -62,6 +80,8 @@ import {listApi as listTagList} from '/@/api/tag'
 import {listApi as listThingList} from '/@/api/thing'
 import {BASE_URL} from "/@/store/constants";
 import {useUserStore} from "/@/store";
+import { reactive, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
 const userStore = useUserStore()
 const router = useRouter();
@@ -74,7 +94,7 @@ const contentData = reactive({
   tagData: [],
   loading: false,
 
-  tabData: ['最新', '最热', '推荐'],
+  tabData: ['最新史料', '最热打卡', '文旅推荐'],
   selectTabIndex: 0,
   tabUnderLeft: 12,
 
@@ -92,7 +112,7 @@ onMounted(() => {
 })
 
 const initSider = () => {
-  contentData.cData.push({key:'-1', title:'全部'})
+  contentData.cData.push({key:'-1', title:'全部香山记忆'})
   listClassificationList().then(res => {
     res.data.forEach(item=>{
       item.key = item.id
@@ -113,7 +133,6 @@ const getSelectedKey = () => {
 }
 const onSelect = (selectedKeys) => {
   contentData.selectedKeys = selectedKeys
-  console.log(contentData.selectedKeys[0])
   if (contentData.selectedKeys.length > 0) {
     getThingList({c: getSelectedKey()})
   }
@@ -125,11 +144,9 @@ const clickTag = (index) => {
   getThingList({tag: contentData.selectTagId})
 }
 
-// 最新|最热|推荐
 const selectTab = (index) => {
   contentData.selectTabIndex = index
-  contentData.tabUnderLeft = 12 + 50 * index
-  console.log(contentData.selectTabIndex)
+  contentData.tabUnderLeft = 12 + 65 * index // 调整了下划线滑动的距离
   let sort = (index === 0 ? 'recent' : index === 1 ? 'hot' : 'recommend')
   const data = {sort: sort}
   if (contentData.selectTagId !== -1) {
@@ -139,18 +156,18 @@ const selectTab = (index) => {
   }
   getThingList(data)
 }
+
 const handleDetail = (item) => {
-  // 跳转新页面
   let text = router.resolve({name: 'detail', query: {id: item.id}})
   window.open(text.href, '_blank')
 }
-// 分页事件
+
 const changePage = (page) => {
   contentData.page = page
   let start = (contentData.page - 1) * contentData.pageSize
   contentData.pageData = contentData.thingData.slice(start, start + contentData.pageSize)
-  console.log('第' + contentData.page + '页')
 }
+
 const getThingList = (data) => {
   contentData.loading = true
   listThingList(data).then(res => {
@@ -160,7 +177,6 @@ const getThingList = (data) => {
         item.cover = BASE_URL + '/api/staticfiles/image/' +  item.cover
       }
     })
-    console.log(res)
     contentData.thingData = res.data
     contentData.total = contentData.thingData.length
     changePage(1)
@@ -169,16 +185,96 @@ const getThingList = (data) => {
     contentData.loading = false
   })
 }
-
-
 </script>
 
 <style scoped lang="less">
+.page-container {
+  background-color: #F5F5DC; /* 全局注入宣纸米白 */
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+/* 历史长卷 Banner 样式 */
+.history-banner {
+  width: 100%;
+  height: 450px;
+  margin-top: 64px; /* 避开Header高度 */
+  background: linear-gradient(to right, rgba(50, 20, 10, 0.85), rgba(160, 82, 45, 0.2)), 
+              url('/images/bg2.jpg') no-repeat center/cover; /* 建议将故居原图替换为 public/images/bg2.jpg 或你的实图 */
+  position: relative;
+  
+  .overlay {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding-left: 10%;
+  }
+
+  .text-wrapper {
+    color: #F5F5DC;
+    
+    .tag {
+      background: #A0522D;
+      padding: 6px 16px;
+      font-size: 14px;
+      letter-spacing: 2px;
+      border-radius: 4px;
+    }
+    
+    .history-title {
+      font-size: 56px;
+      margin: 24px 0 16px;
+      font-family: 'STZhongsong', 'SimSun', serif;
+      color: #FFF;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    .history-desc {
+      max-width: 550px;
+      font-size: 18px;
+      line-height: 1.8;
+      margin-bottom: 36px;
+      opacity: 0.95;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .action-group {
+      display: flex;
+      gap: 20px;
+      
+      .cultural-btn {
+        padding: 12px 32px;
+        font-size: 16px;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: none;
+      }
+      
+      .primary-btn {
+        background: #A0522D;
+        color: #FFF;
+        &:hover { background: #8B4513; }
+      }
+      
+      .ghost-btn {
+        background: transparent;
+        border: 2px solid #F5F5DC;
+        color: #F5F5DC;
+        &:hover {
+          background: #F5F5DC;
+          color: #A0522D;
+        }
+      }
+    }
+  }
+}
+
 .content {
   display: flex;
   flex-direction: row;
   width: 1100px;
-  margin: 80px auto;
+  margin: 40px auto 0; /* 调整间距 */
 }
 
 .content-left {
@@ -188,279 +284,91 @@ const getThingList = (data) => {
 
 .left-search-item {
   overflow: hidden;
-  border-bottom: 1px solid #cedce4;
+  border-bottom: 1px dashed #D2B48C; /* 分割线改为具有复古感的虚线 */
   margin-top: 24px;
   padding-bottom: 24px;
 }
 
 h4 {
-  color: #4d4d4d;
-  font-weight: 600;
-  font-size: 16px;
+  color: #4A3A35;
+  font-family: 'STZhongsong', 'SimSun', serif;
+  font-weight: bold;
+  font-size: 18px;
   line-height: 24px;
   height: 24px;
 }
 
-.category-item {
-  cursor: pointer;
-  color: #333;
-  margin: 12px 0 0;
-  padding-left: 16px;
-}
-
-ul {
-  margin: 0;
-  padding: 0;
-}
-
-ul {
-  list-style-type: none;
-}
-
-li {
-  margin: 4px 0 0;
-  display: list-item;
-  text-align: -webkit-match-parent;
-}
-
-.child {
-  color: #333;
-  padding-left: 16px;
-}
-
-.child:hover {
-  color: #4684e2;
-}
-
-.select {
-  color: #4684e2;
-}
-
-.flex-view {
-  -webkit-box-pack: justify;
-  -ms-flex-pack: justify;
-  //justify-content: space-between;
-  display: flex;
-}
-
-.name {
-  font-size: 14px;
-}
-
-.name:hover {
-  color: #4684e2;
-}
-
-.count {
-  font-size: 14px;
-  color: #999;
-}
-
-.check-item {
-  font-size: 0;
-  height: 18px;
-  line-height: 12px;
-  margin: 12px 0 0;
-  color: #333;
-  cursor: pointer;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-}
-
-.check-item input {
-  cursor: pointer;
-}
-
-.check-item label {
-  font-size: 14px;
-  margin-left: 12px;
-  cursor: pointer;
-  -webkit-box-flex: 1;
-  -ms-flex: 1;
-  flex: 1;
-}
-
 .tag-view {
-  -ms-flex-wrap: wrap;
   flex-wrap: wrap;
-  margin-top: 4px;
+  margin-top: 12px;
 }
 
 .tag-flex-view {
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
 }
 
 .tag {
-  background: #fff;
-  border: 1px solid #a1adc6;
-  -webkit-box-sizing: border-box;
+  background: transparent;
+  border: 1px solid #C0A080;
   box-sizing: border-box;
-  border-radius: 16px;
-  height: 20px;
-  line-height: 18px;
-  padding: 0 8px;
+  border-radius: 4px; /* 改为方形标签更显传统 */
+  height: 24px;
+  line-height: 22px;
+  padding: 0 10px;
   margin: 8px 8px 0 0;
   cursor: pointer;
-  font-size: 12px;
-  color: #152833;
+  font-size: 13px;
+  color: #5C4A42;
+  transition: all 0.3s ease;
 }
 
-.tag:hover {
-  background: #4684e3;
-  color: #fff;
-  border: 1px solid #4684e3;
-}
-
-.tag-select {
-  background: #4684e3;
-  color: #fff;
-  border: 1px solid #4684e3;
+.tag:hover, .tag-select {
+  background: #A0522D;
+  color: #F5F5DC;
+  border: 1px solid #A0522D;
 }
 
 .content-right {
-  -webkit-box-flex: 1;
-  -ms-flex: 1;
   flex: 1;
   padding-top: 12px;
 
-  .pc-search-view {
-    margin: 0 0 24px;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
-    align-items: center;
-
-    .search-icon {
-      width: 20px;
-      height: 20px;
-      -webkit-box-flex: 0;
-      -ms-flex: 0 0 20px;
-      flex: 0 0 20px;
-      margin-right: 16px;
-    }
-
-    input {
-      outline: none;
-      border: 0px;
-      -webkit-box-flex: 1;
-      -ms-flex: 1;
-      flex: 1;
-      border-bottom: 1px solid #cedce4;
-      color: #152844;
-      font-size: 14px;
-      height: 22px;
-      line-height: 22px;
-      -ms-flex-item-align: end;
-      align-self: flex-end;
-      padding-bottom: 8px;
-    }
-
-    .clear-search-icon {
-      position: relative;
-      left: -20px;
-      cursor: pointer;
-    }
-
-    button {
-      outline: none;
-      border: none;
-      font-size: 14px;
-      color: #fff;
-      background: #288dda;
-      border-radius: 32px;
-      width: 88px;
-      height: 32px;
-      line-height: 32px;
-      margin-left: 2px;
-      cursor: pointer;
-    }
-
-    .float-count {
-      color: #999;
-      margin-left: 24px;
-    }
-  }
-
-  .flex-view {
-    display: flex;
-  }
-
   .top-select-view {
-    -webkit-box-pack: justify;
-    -ms-flex-pack: justify;
     justify-content: space-between;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
     align-items: center;
     height: 40px;
     line-height: 40px;
 
-    .type-view {
-      position: relative;
-      font-weight: 400;
-      font-size: 18px;
-      color: #5f77a6;
-
-      .type-tab {
-        margin-right: 32px;
-        cursor: pointer;
-      }
-
-      .type-tab-select {
-        color: #152844;
-        font-weight: 600;
-        font-size: 20px;
-      }
-
-      .tab-underline {
-        position: absolute;
-        bottom: 0;
-        //left: 22px;
-        width: 16px;
-        height: 4px;
-        background: #4684e2;
-        -webkit-transition: left .3s;
-        transition: left .3s;
-      }
-    }
-
     .order-view {
       position: relative;
-      color: #6c6c6c;
-      font-size: 14px;
-
-      .title {
-        margin-right: 8px;
-      }
+      color: #6C5C54;
+      font-size: 16px;
+      font-family: 'STZhongsong', 'SimSun', serif;
 
       .tab {
-        color: #999;
-        margin-right: 20px;
+        color: #998A83;
+        margin-right: 32px;
         cursor: pointer;
+        transition: color 0.3s;
       }
 
       .tab-select {
-        color: #152844;
+        color: #A0522D;
+        font-weight: bold;
       }
 
       .tab-underline {
         position: absolute;
         bottom: 0;
-        left: 84px;
-        width: 16px;
-        height: 4px;
-        background: #4684e2;
-        -webkit-transition: left .3s;
-        transition: left .3s;
+        left: 12px;
+        width: 64px; /* 延长下划线 */
+        height: 3px;
+        background: #A0522D; /* 主色调下划线 */
+        transition: left 0.3s;
       }
     }
-
   }
 
   .pc-thing-list {
-    -ms-flex-wrap: wrap;
     flex-wrap: wrap;
 
     .thing-item {
@@ -470,59 +378,60 @@ li {
       flex: 1;
       margin-right: 20px;
       height: fit-content;
-      overflow: hidden;
       margin-top: 26px;
       margin-bottom: 36px;
       cursor: pointer;
+      background: #FFFDFC;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(160, 82, 45, 0.08); /* 暖色阴影 */
+      transition: all 0.4s ease;
+
+      &:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px rgba(160, 82, 45, 0.15);
+      }
 
       .img-view {
-        //text-align: center;
-        height: 200px;
-        width: 255px;
+        height: 180px;
+        width: 100%;
+        overflow: hidden;
+        border-radius: 6px 6px 0 0;
 
         img {
-          height: 200px;
-          width: 255px;
-          margin: 0 auto;
-          background-size: cover;
+          height: 100%;
+          width: 100%;
           object-fit: cover;
+          /* 核心交互：复古黑白滤镜，悬停恢复生机 */
+          filter: sepia(0.5) contrast(1.1) brightness(0.9);
+          transition: transform 0.6s ease, filter 0.6s ease;
         }
       }
 
+      &:hover .img-view img {
+        transform: scale(1.05);
+        filter: sepia(0) contrast(1) brightness(1); /* 鼠标移入变回现代彩色 */
+      }
+
       .info-view {
-        //background: #f6f9fb;
-        overflow: hidden;
-        padding: 0 16px;
+        padding: 16px;
+        border-top: 3px solid #EADDD7;
 
         .thing-name {
-          line-height: 32px;
-          margin-top: 12px;
-          color: #0F1111 !important;
-          font-size: 15px !important;
-          font-weight: 400 !important;
-          font-style: normal !important;
-          text-transform: none !important;
-          text-decoration: none !important;
+          line-height: 24px;
+          margin-top: 0;
+          color: #4A3A35 !important;
+          font-size: 16px !important;
+          font-weight: bold !important;
+          font-family: 'STZhongsong', 'SimSun', serif;
         }
 
-        .price {
-          color: #ff7b31;
-          font-size: 20px;
-          line-height: 20px;
-          margin-top: 4px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .translators {
-          color: #6f6f6f;
-          font-size: 12px;
-          line-height: 14px;
-          margin-top: 4px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        .a-price-wrapper {
+          display: block;
+          margin-top: 10px;
+          color: #8B4513;
+          font-size: 13px;
+          border-top: 1px dashed #EADDD7;
+          padding-top: 10px;
         }
       }
     }
@@ -533,7 +442,7 @@ li {
       text-align: center;
       width: 100%;
       font-size: 16px;
-      color: #152844;
+      color: #A0522D;
     }
   }
 
@@ -543,15 +452,4 @@ li {
     margin-top: 48px;
   }
 }
-
-.a-price-symbol {
-  top: -0.5em;
-  font-size: 12px;
-}
-
-.a-price {
-  color: #0F1111;
-  font-size: 14px;
-}
-
 </style>
