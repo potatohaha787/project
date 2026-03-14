@@ -27,6 +27,11 @@ const constantRouterMap = [
         component: () => import('/@/views/index/portal.vue')
       },
       {
+        path: 'history',
+        name: 'history',
+        component: () => import('/@/views/index/history.vue')
+      },
+      {
         path: 'detail',
         name: 'detail',
         component: () => import('/@/views/index/detail.vue')

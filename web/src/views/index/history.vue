@@ -1,35 +1,22 @@
 <template>
-  <div class="portal">
+  <div class="history-page">
     <Header />
 
-    <section class="hero-banner">
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <h1 class="hero-title">伟人故里 · 魅力中山</h1>
-        <p class="hero-subtitle">探寻孙中山故居的厚重，体验岭南水乡的温婉，品味地道香山美食</p>
-        <div class="hero-actions">
-          <button class="btn-primary" @click="scrollToTimeline">开启旅程</button>
-        </div>
+    <div class="page-banner">
+      <div class="banner-overlay"></div>
+      <div class="banner-content">
+        <h1>香山纪事 · 完整长卷</h1>
+        <p>跨越近千年的时光，探索中山的辉煌历程</p>
       </div>
-    </section>
+    </div>
 
-    <section class="history-section" id="history-timeline">
-
-      <div class="section-header">
-        <h2 class="section-title">香山纪事 · 岁月长卷</h2>
-        <p class="section-desc">走过近千年的风雨历程，感受这座城市的沧桑与辉煌</p>
-        <div class="more-btn" @click="goToFullHistory">
-          查看完整时间线 <span class="arrow">&rarr;</span>
-        </div>
-      </div>
-
+    <section class="full-history-section">
       <div class="timeline-wrapper">
         <div class="timeline-track">
-          <div class="timeline-item" v-for="(item, index) in historyList.slice(0, 4)" :key="index"
+          <div class="timeline-item" v-for="(item, index) in historyList" :key="index"
             :class="{ 'item-top': index % 2 === 0, 'item-bottom': index % 2 !== 0 }">
             <div class="timeline-dot"></div>
             <div class="timeline-stem"></div>
-
             <div class="timeline-content" @click="openDetail(item)">
               <div class="timeline-year">{{ item.year }}</div>
               <h3 class="timeline-event-title">{{ item.title }}</h3>
@@ -58,10 +45,6 @@
       </div>
     </a-modal>
 
-    <div class="portal-content" id="portal-main-content">
-      <Content />
-    </div>
-
     <Footer />
   </div>
 </template>
@@ -69,79 +52,65 @@
 <script>
 import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
-import Content from '/@/views/index/components/content.vue'
 
 export default {
-  components: { Footer, Header, Content },
+  components: { Footer, Header },
   data() {
     return {
       detailVisible: false,
       currentHistory: null,
       historyList: [
         {
-          year: '1152年',
-          title: '香山立县',
+          year: '1152年', title: '香山立县',
           brief: '南宋绍兴二十二年，正式设立香山县，开启了独立行政建制的历史序幕。',
           image: 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          detail: [
-            '南宋绍兴二十二年（1152年），由东莞县划出香山镇，正式设立香山县。在此之前，这里曾是盛产海盐和香木的海岛。',
-            '立县标志着香山地区在政治、经济、文化上迈入了新的发展阶段。香山之名，来源于境内五桂山“奇花异卉，神仙茶隔水闻香”。'
-          ]
+          detail: ['南宋绍兴二十二年（1152年），由东莞县划出香山镇，正式设立香山县。在此之前，这里曾是盛产海盐和香木的海岛。', '立县标志着香山地区在政治、经济、文化上迈入了新的发展阶段。香山之名，来源于境内五桂山“奇花异卉，神仙茶隔水闻香”。']
         },
         {
-          year: '1866年',
-          title: '伟人诞生',
+          year: '1866年', title: '伟人诞生',
           brief: '中国民主革命的伟大先驱孙中山先生在香山县翠亨村诞生。',
           image: 'https://images.unsplash.com/photo-1583884826131-063989c44d18?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          detail: [
-            '1866年11月12日，孙中山先生出生于广东省香山县（今中山市）南朗镇翠亨村。',
-            '作为中国近代民主革命的伟大先行者，他的“天下为公”精神至今仍激励着无数中山人。'
-          ]
+          detail: ['1866年11月12日，孙中山先生出生于广东省香山县（今中山市）南朗镇翠亨村。', '作为中国近代民主革命的伟大先行者，他的“天下为公”精神至今仍激励着无数中山人。']
         },
         {
-          year: '1925年',
-          title: '纪念伟人，更名中山',
+          year: '1925年', title: '纪念伟人，更名中山',
           brief: '为纪念在此诞生的伟大先驱孙中山先生，香山县易名为中山县。',
           image: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          detail: [
-            '1925年4月15日，为了纪念刚刚在北京逝世的中国民主革命伟大先驱孙中山先生，广州大元帅府下令将香山县更名为中山县。'
-          ]
+          detail: ['1925年4月15日，为了纪念刚刚在北京逝世的中国民主革命伟大先驱孙中山先生，广州大元帅府下令将香山县更名为中山县。', '中山市不仅是伟人的故乡，更是近代中国走向共和、向世界开放的先锋门户。']
         },
         {
-          year: '1988年',
-          title: '升格地级市',
-          brief: '中山正式升格为地级市，跻身“广东四小虎”，经济步入快车道。',
+          year: '1988年', title: '升格地级市',
+          brief: '中山正式升格为地级市，跻身“广东四小虎”，经济社会发展步入快车道。',
           image: 'https://images.unsplash.com/photo-1582269438706-e7c65ba443c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          detail: [
-            '1988年1月，中山升格为地级市。乘着改革开放的春风，中山市大力发展乡镇企业，创造了闻名全国的“中山模式”。'
-          ]
+          detail: ['1988年1月，中山升格为地级市。乘着改革开放的春风，中山市大力发展乡镇企业，创造了闻名全国的“中山模式”。', '在此期间，中山与东莞、南海、顺德并称为“广东四小虎”。']
         },
-        // 后面的数据虽然写了，但因为上面的 slice(0, 4)，首页不会显示，只有跳转新页面后才显示
         {
-          year: '2024年',
-          title: '深中通道通车',
-          brief: '世纪工程深中通道正式建成通车，大湾区一小时生活圈形成。',
+          year: '1997年', title: '荣获联合国人居奖',
+          brief: '凭借卓越的生态环境与城市治理，中山市成为国内首批获此殊荣的城市。',
+          image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          detail: ['1997年，中山市以“注重环境保护，城市绿化、净化、美化成绩卓著”为由，荣获该年度的“联合国人居环境奖”。', '这一奖项标志着中山成功兼顾了生态文明与人居环境的建设，确立了其“宜居城市”的金字招牌。']
+        },
+        {
+          year: '2019年', title: '大湾区重要节点',
+          brief: '《粤港澳大湾区发展规划纲要》正式发布，中山被明确定位为重要节点城市。',
+          image: 'https://images.unsplash.com/photo-1555899434-94d1368aa7af?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          detail: ['2019年2月，中共中央、国务院印发了《粤港澳大湾区发展规划纲要》，中山市迎来了历史性的发展新机遇。', '作为珠江口西岸的重要节点城市，中山致力于打造成为大湾区的精品文旅城市。']
+        },
+        {
+          year: '2024年', title: '深中通道通车',
+          brief: '超级工程深中通道建成通车，大湾区“一小时生活圈”核心格局形成。',
           image: 'https://images.unsplash.com/photo-1561081498-8ddc0eb09e20?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          detail: [
-            '深中通道是集“桥、岛、隧、水下互通”于一体的跨海集群工程。通车后，从中山到深圳的车程由2小时缩短至不到30分钟。'
-          ]
+          detail: ['深中通道是集“桥、岛、隧、水下互通”于一体的跨海集群工程。通车后，从中山到深圳的车程由2小时缩短至不到30分钟。', '这标志着中山正式迈入大湾区发展的核心舞台。']
         }
       ]
     }
   },
   methods: {
-    scrollToTimeline() {
-      const el = document.getElementById('history-timeline');
-      if (el) { window.scrollTo({ top: el.offsetTop - 64, behavior: 'smooth' }); }
-    },
-    openDetail(item) {
-      this.currentHistory = item;
-      this.detailVisible = true;
-    },
-    // 新增：跳转到完整的历史时间线页面
-    goToFullHistory() {
-      this.$router.push({ name: 'history' });
-    }
+    openDetail(item) { this.currentHistory = item; this.detailVisible = true; }
+  },
+  mounted() {
+    // 进入新页面时自动滚动到最顶部
+    window.scrollTo(0, 0);
   }
 }
 </script>
@@ -151,151 +120,60 @@ export default {
 @accent-color: #c59d5f;
 @bg-gray: #f3f4f6;
 
-.hero-banner {
+.history-page {
+  background-color: @bg-gray;
+  min-height: 100vh;
+}
+
+.page-banner {
   position: relative;
-  height: 95vh;
-  min-height: 600px;
+  /* 避开顶部固定导航栏的遮挡 */
+  padding: 140px 20px 80px;
   background-image: url(/@/assets/images/bg.jpg);
   background-size: cover;
   background-position: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   text-align: center;
+  color: #fff;
 
-  .hero-overlay {
+  .banner-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(49, 44, 44, 0.7));
+    background: rgba(0, 0, 0, 0.65);
   }
 
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 100%;
-    height: 250px;
-    z-index: 5;
-    pointer-events: none;
-  }
-
-  .hero-content {
+  .banner-content {
     position: relative;
-    z-index: 10;
-    color: #fff;
-    padding: 0 20px;
-    animation: fadeInDown 1.2s ease-out;
-  }
-
-  .hero-title {
-    font-size: 56px;
-    font-weight: 700;
-    font-family: 'Noto Serif SC', 'SimSun', serif;
-    margin-bottom: 24px;
-    letter-spacing: 4px;
-    color: @accent-color;
-  }
-
-  .hero-subtitle {
-    font-size: 20px;
-    margin-bottom: 48px;
-    font-weight: 300;
-    letter-spacing: 2px;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  }
-
-  .hero-actions {
-    display: flex;
-    justify-content: center;
-
-    .btn-primary {
-      padding: 14px 40px;
-      font-size: 16px;
-      border-radius: 30px;
-      cursor: pointer;
-      transition: all 0.3s;
-      font-weight: 500;
-      background: @primary-color;
-      color: #fff;
-      border: 2px solid @primary-color;
-
-      &:hover {
-        background: transparent;
-        border-color: #fff;
-      }
-    }
-  }
-}
-
-/* === 横向S型时间轴 (首页部分) === */
-.history-section {
-  margin-top: 0;
-  padding: 60px 0 60px;
-  background-color: @bg-gray;
-  position: relative;
-  z-index: 10;
-
-  .section-header {
-    max-width: 1200px;
-    margin: 0 auto 40px;
-    position: relative;
-    text-align: center;
     z-index: 2;
 
-    .section-title {
-      font-size: 36px;
-      color: #1f2937;
-      font-weight: 600;
+    h1 {
+      font-size: 42px;
+      font-weight: bold;
+      color: @accent-color;
+      letter-spacing: 4px;
       font-family: 'Noto Serif SC', serif;
       margin-bottom: 12px;
+    }
+
+    p {
+      font-size: 16px;
+      color: #e5e7eb;
       letter-spacing: 2px;
-    }
-
-    .section-desc {
-      font-size: 15px;
-      color: #4b5563;
-      font-weight: 500;
-      letter-spacing: 1px;
-    }
-
-    /* 新增：绝对定位在右侧的【查看更多】按钮 */
-    .more-btn {
-      position: absolute;
-      right: 20px;
-      bottom: 0px;
-      font-size: 15px;
-      color: @primary-color;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      transition: all 0.3s;
-
-      .arrow {
-        margin-left: 6px;
-        font-size: 18px;
-        transition: transform 0.3s;
-      }
-
-      &:hover {
-        color: @accent-color;
-
-        .arrow {
-          transform: translateX(5px);
-        }
-      }
     }
   }
 }
 
+.full-history-section {
+  background-color: @bg-gray;
+}
+
+/* 时间轴代码与首页完全一致 */
 .timeline-wrapper {
   width: 100%;
   overflow-x: auto;
-  padding: 380px 20px;
+  padding: 250px 20px 300px;
   display: flex;
   justify-content: flex-start;
   scroll-behavior: smooth;
@@ -452,6 +330,7 @@ export default {
   }
 }
 
+/* 弹窗代码 */
 :deep(.history-modal) {
   .ant-modal-content {
     border-radius: 16px;
@@ -508,34 +387,6 @@ export default {
     margin-bottom: 12px;
     text-indent: 2em;
     text-align: justify;
-  }
-}
-
-.portal-content {
-  position: relative;
-  background-color: #f8fafc;
-  min-height: 500px;
-  z-index: 10;
-}
-
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-30px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 手机端由于屏幕太小，把按钮放到标题正下方 */
-@media (max-width: 768px) {
-  .history-section .section-header .more-btn {
-    position: static;
-    justify-content: center;
-    margin-top: 16px;
   }
 }
 </style>

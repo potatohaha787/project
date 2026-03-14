@@ -25,7 +25,7 @@
             <p class="err-view">
             </p>
           </div>
-<!--          <img src="@/assets/pwd-hidden.svg" class="right-icon">-->
+          <!--          <img src="@/assets/pwd-hidden.svg" class="right-icon">-->
           <!---->
         </div>
         <div class="next-btn-view">
@@ -41,8 +41,8 @@
 </template>
 
 <script setup lang="ts">
-import {useUserStore} from '/@/store';
-import {message} from "ant-design-vue";
+import { useUserStore } from '/@/store';
+import { message } from "ant-design-vue";
 import LogoIcon from '/@/assets/images/k-logo.png';
 import MailIcon from '/@/assets/images/mail-icon.svg';
 import PwdIcon from '/@/assets/images/pwd-icon.svg';
@@ -58,11 +58,11 @@ const pageData = reactive({
   }
 })
 
-const handleLogin = ()=> {
+const handleLogin = () => {
   userStore.login({
     username: pageData.loginForm.username,
     password: pageData.loginForm.password
-  }).then(res=> {
+  }).then(res => {
     loginSuccess()
     console.log('success==>', userStore.user_name)
     console.log('success==>', userStore.user_id)
@@ -73,10 +73,10 @@ const handleLogin = ()=> {
 }
 
 const handleCreateUser = () => {
-  router.push({name:'register'})
+  router.push({ name: 'register' })
 }
 
-const loginSuccess= ()=> {
+const loginSuccess = () => {
   router.push({ name: 'portal' })
   message.success('登录成功！')
 }
@@ -95,9 +95,9 @@ div {
   object-fit: cover;
   height: 100%;
   max-width: 100%;
-  display:flex;
+  display: flex;
   justify-content: center;
-  align-items:center;
+  align-items: center;
 }
 
 .new-content {
@@ -177,7 +177,8 @@ div {
     font-weight: 500;
   }
 
-  .mail-login, .tel-login {
+  .mail-login,
+  .tel-login {
     padding: 0 28px;
   }
 
@@ -248,7 +249,10 @@ button {
   border-width: 0px;
 }
 
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   margin: 0;
   padding: 0;
   outline: none;
@@ -264,11 +268,10 @@ button, input, select, textarea {
   //text-align: center;
   display: block;
   overflow: hidden;
-  flex:1;
+  flex: 1;
   margin: 0 auto;
   color: #3d5b96;
   font-size: 14px;
   cursor: pointer;
 }
-
 </style>
