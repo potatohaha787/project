@@ -8,41 +8,22 @@
       <div class="main">
         <div class="main_right">
           <h2 class="sys_title">管理员登录</h2>
-          <a-form
-              ref="myform"
-              layout="vertical"
-              :model="data.loginForm"
-              :rules="data.rules"
-              :hideRequiredMark="true"
-          >
+          <a-form ref="myform" layout="vertical" :model="data.loginForm" :rules="data.rules" :hideRequiredMark="true">
             <a-form-item name="username" label="账号" :colon="false">
-              <a-input
-                  size="large"
-                  placeholder="请输入登录账号"
-                  v-model:value="data.loginForm.username"
-                  @pressEnter="handleSubmit">
-                <a-icon slot="prefix" type="user"/>
+              <a-input size="large" placeholder="请输入登录账号" v-model:value="data.loginForm.username"
+                @pressEnter="handleSubmit">
+                <a-icon slot="prefix" type="user" />
               </a-input>
             </a-form-item>
             <a-form-item name="password" label="密码" :colon="false">
-              <a-input
-                  size="large"
-                  type="password"
-                  placeholder="请输入登录密码"
-                  v-model:value="data.loginForm.password"
-                  @pressEnter="handleSubmit">
-                <a-icon slot="prefix" type="lock"/>
+              <a-input size="large" type="password" placeholder="请输入登录密码" v-model:value="data.loginForm.password"
+                @pressEnter="handleSubmit">
+                <a-icon slot="prefix" type="lock" />
               </a-input>
             </a-form-item>
             <a-form-item style="padding-top: 24px">
-              <a-button
-                  class="login-button"
-                  type="primary"
-                  :loading="loginBtn"
-                  size="large"
-                  block
-                  @click="handleSubmit"
-              >
+              <a-button class="login-button" type="primary" :loading="loginBtn" size="large" block
+                @click="handleSubmit">
                 登录
               </a-button>
             </a-form-item>
@@ -62,13 +43,13 @@
 </template>
 
 <script setup lang="ts">
-import {useUserStore} from '/@/store';
+import { useUserStore } from '/@/store';
 import logoImage from '/@/assets/images/k-logo.png';
 
 const router = useRouter();
 const userStore = useUserStore();
 
-import {message} from "ant-design-vue";
+import { message } from "ant-design-vue";
 
 const myform = ref()
 
@@ -81,10 +62,10 @@ const data = reactive({
   },
   rules: {
     username: [
-      {required: true, message: '请输入用户名', trigger: 'blur'}
+      { required: true, message: '请输入用户名', trigger: 'blur' }
     ],
     password: [
-      {required: true, message: '请输入密码', trigger: 'blur'}
+      { required: true, message: '请输入密码', trigger: 'blur' }
     ]
   }
 })
@@ -101,10 +82,10 @@ const handleLogin = () => {
   userStore.adminLogin({
     username: data.loginForm.username,
     password: data.loginForm.password
-  }).then(res=>{
+  }).then(res => {
     loginSuccess()
-  }).catch(err=> {
-      message.warn(err.msg || '登录失败')
+  }).catch(err => {
+    message.warn(err.msg || '登录失败')
   })
 }
 
@@ -117,7 +98,6 @@ const loginSuccess = () => {
 </script>
 
 <style lang="less" scoped>
-
 #userLayout {
   position: relative;
   height: 100vh;
@@ -200,5 +180,4 @@ const loginSuccess = () => {
     height: 80px;
   }
 }
-
 </style>

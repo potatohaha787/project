@@ -2,22 +2,15 @@
   <div>
     <!--页面区域-->
     <div class="page-view">
-      <a-table
-          size="middle"
-          rowKey="id"
-          :loading="data.loading"
-          :columns="columns"
-          :data-source="data.dataList"
-          :scroll="{ x: 'max-content' }"
-          :pagination="{
+      <a-table size="middle" rowKey="id" :loading="data.loading" :columns="columns" :data-source="data.dataList"
+        :scroll="{ x: 'max-content' }" :pagination="{
           size: 'default',
           current: data.page,
           pageSize: data.pageSize,
           onChange: (current) => (data.page = current),
           showSizeChanger: false,
           showTotal: (total) => `共${total}条数据`,
-        }"
-      >
+        }">
         <template #bodyCell="{ text, record, index, column }">
           <template v-if="column.key === 'operation'">
             <span>
@@ -39,7 +32,7 @@ import { FormInstance, message } from 'ant-design-vue';
 import { listOpLogListApi } from '/@/api/log';
 
 
-const columns = reactive([
+const columns = reactive<TableColumnsType>([
   {
     title: '序号',
     dataIndex: 'index',
@@ -75,7 +68,7 @@ const columns = reactive([
     dataIndex: 'accessTime',
     key: 'accessTime',
     align: 'center',
-    customRender: ({ text, record, index, column }) => text + 'ms' ,
+    customRender: ({ text, record, index, column }) => text + 'ms',
   }
 ]);
 
@@ -99,18 +92,18 @@ const getDataList = () => {
   listOpLogListApi({
     keyword: data.keyword,
   })
-      .then((res) => {
-        data.loading = false;
-        console.log(res);
-        res.data.forEach((item: any, index: any) => {
-          item.index = index + 1;
-        });
-        data.dataList = res.data;
-      })
-      .catch((err) => {
-        data.loading = false;
-        console.log(err);
+    .then((res) => {
+      data.loading = false;
+      console.log(res);
+      res.data.forEach((item: any, index: any) => {
+        item.index = index + 1;
       });
+      data.dataList = res.data;
+    })
+    .catch((err) => {
+      data.loading = false;
+      console.log(err);
+    });
 };
 
 
@@ -137,7 +130,7 @@ const rowSelection = ref({
   text-align: right;
 }
 
-.table-operations > button {
+.table-operations>button {
   margin-right: 8px;
 }
 </style>

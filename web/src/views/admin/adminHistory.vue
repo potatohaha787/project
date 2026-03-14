@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!--页面区域-->
     <div class="page-view">
       <div class="table-operations">
         <a-space>
@@ -19,7 +18,7 @@
         }">
         <template #bodyCell="{ text, record, index, column }">
           <template v-if="column.key === 'imageUrl'">
-            <img :src="text" style="width: 60px;height: 40px;" />
+            <img :src="text" style="width: 80px;height: 50px;object-fit: cover;" />
           </template>
           <template v-if="column.key === 'operation'">
             <span>
@@ -34,7 +33,6 @@
       </a-table>
     </div>
 
-    <!--弹窗区域-->
     <div>
       <a-modal :visible="modal.visile" :forceRender="true" :title="modal.title" ok-text="确认" cancel-text="取消"
         @cancel="handleCancel" @ok="handleOk">
@@ -42,21 +40,35 @@
           <a-form ref="myform" :label-col="{ style: { width: '80px' } }" :model="modal.form" :rules="modal.rules">
             <a-row :gutter="24">
               <a-col span="24">
-                <a-form-item label="横幅图片">
+                <a-form-item label="事件图片">
                   <a-upload-dragger name="file" accept="image/*" :multiple="false" :before-upload="beforeUpload">
                     <p class="ant-upload-text">
-                      请选择要上传的横幅图片
+                      请选择要上传的事件图片
                     </p>
                   </a-upload-dragger>
                 </a-form-item>
               </a-col>
               <a-col span="24">
-                <a-form-item label="跳转链接" name="link">
-                  <a-input placeholder="请输入" v-model:value="modal.form.link" />
+                <a-form-item label="年份" name="year">
+                  <a-input placeholder="例：1152年" v-model:value="modal.form.year" />
+                </a-form-item>
+              </a-col>
+              <a-col span="24">
+                <a-form-item label="事件标题" name="title">
+                  <a-input placeholder="请输入事件标题" v-model:value="modal.form.title" />
+                </a-form-item>
+              </a-col>
+              <a-col span="24">
+                <a-form-item label="事件简介" name="brief">
+                  <a-textarea placeholder="请输入简短介绍" v-model:value="modal.form.brief" :rows="2" />
+                </a-form-item>
+              </a-col>
+              <a-col span="24">
+                <a-form-item label="详细内容" name="detail">
+                  <a-textarea placeholder='请输入JSON数组格式，如：["第一段", "第二段"]' v-model:value="modal.form.detail" :rows="4" />
                 </a-form-item>
               </a-col>
             </a-row>
-
           </a-form>
         </div>
       </a-modal>
@@ -65,8 +77,9 @@
 </template>
 
 <script setup lang="ts">
+import { ref, reactive, onMounted } from 'vue';
 import { FormInstance, message } from 'ant-design-vue';
-import { createApi, listApi, updateApi, deleteApi } from '/@/api/ad';
+import { createApi, listApi, updateApi, deleteApi } from '/@/api/history';
 import { BASE_URL } from "/@/store/constants";
 
 const columns = reactive<TableColumnsType>([
@@ -74,26 +87,32 @@ const columns = reactive<TableColumnsType>([
     title: '序号',
     dataIndex: 'index',
     key: 'index',
-    align: 'center'
+    align: 'center' as const
+  },
+  {
+    title: '年份',
+    dataIndex: 'year',
+    key: 'year',
+    align: 'center' as const
+  },
+  {
+    title: '事件标题',
+    dataIndex: 'title',
+    key: 'title',
+    align: 'center' as const
   },
   {
     title: '图片',
     dataIndex: 'imageUrl',
     key: 'imageUrl',
-    align: 'center',
-  },
-  {
-    title: '跳转链接',
-    dataIndex: 'link',
-    key: 'link',
-    align: 'center'
+    align: 'center' as const,
   },
   {
     title: '操作',
     dataIndex: 'action',
     key: 'operation',
-    align: 'center',
-    fixed: 'right',
+    align: 'center' as const,
+    fixed: 'right' as const,
     width: 140,
   },
 ]);
@@ -104,16 +123,13 @@ const beforeUpload = (file: File) => {
   const copyFile = new File([file], fileName);
   console.log(copyFile);
   modal.form.imageFile = copyFile;
-  return false;
+  return false; // 阻止默认上传，由后端统一处理
 };
-
-const fileList = ref([]);
 
 // 页面数据
 const data = reactive({
   list: [],
   loading: false,
-  currentAdminUserName: '',
   keyword: '',
   selectedRowKeys: [] as any[],
   pageSize: 10,
@@ -127,13 +143,17 @@ const modal = reactive({
   title: '',
   form: {
     id: undefined,
+    year: undefined,
+    title: undefined,
+    brief: undefined,
+    detail: undefined,
     image: undefined,
-    imageFile: undefined,
+    imageFile: undefined as File | undefined,
     imageUrl: undefined,
-    link: undefined,
   },
   rules: {
-    link: [{ required: true, message: '请输入', trigger: 'change' }],
+    year: [{ required: true, message: '请输入年份', trigger: 'blur' }],
+    title: [{ required: true, message: '请输入事件标题', trigger: 'blur' }],
   },
 });
 
@@ -154,7 +174,12 @@ const getList = () => {
       res.data.forEach((item: any, index: any) => {
         item.index = index + 1;
         if (item.image) {
-          item.imageUrl = BASE_URL + '/api/staticfiles/image/' + item.image
+          // 这里如果是网络图片(http开头)就直接用，否则拼接后台地址
+          if (item.image.startsWith('http')) {
+            item.imageUrl = item.image;
+          } else {
+            item.imageUrl = BASE_URL + '/api/staticfiles/image/' + item.image;
+          }
         }
       });
       data.list = res.data;
@@ -165,9 +190,8 @@ const getList = () => {
     });
 };
 
-
 const rowSelection = ref({
-  onChange: (selectedRowKeys: (string | number)[], selectedRows: DataItem[]) => {
+  onChange: (selectedRowKeys: (string | number)[], selectedRows: any[]) => {
     console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
     data.selectedRowKeys = selectedRowKeys;
   },
@@ -180,10 +204,10 @@ const handleAdd = () => {
   modal.title = '新增';
   // 重置
   for (const key in modal.form) {
-    modal.form[key] = undefined;
+    modal.form[key as keyof typeof modal.form] = undefined;
   }
-  modal.form.image = undefined
 };
+
 const handleEdit = (record: any) => {
   resetModal();
   modal.visile = true;
@@ -191,12 +215,13 @@ const handleEdit = (record: any) => {
   modal.title = '编辑';
   // 重置
   for (const key in modal.form) {
-    modal.form[key] = undefined;
+    modal.form[key as keyof typeof modal.form] = undefined;
   }
   for (const key in record) {
-    modal.form[key] = record[key];
+    if (key in modal.form) {
+      modal.form[key as keyof typeof modal.form] = record[key];
+    }
   }
-  modal.form.image = undefined
 };
 
 const confirmDelete = (record: any) => {
@@ -213,7 +238,6 @@ const confirmDelete = (record: any) => {
 const handleBatchDelete = () => {
   console.log(data.selectedRowKeys);
   if (data.selectedRowKeys.length <= 0) {
-    console.log('hello');
     message.warn('请勾选删除项');
     return;
   }
@@ -233,14 +257,24 @@ const handleOk = () => {
     .then(() => {
       const formData = new FormData();
       if (modal.form.id) {
-        formData.append('id', modal.form.id);
+        formData.append('id', modal.form.id.toString());
       }
-      if (modal.form.link) {
-        formData.append('link', modal.form.link);
+      if (modal.form.year) {
+        formData.append('year', modal.form.year);
+      }
+      if (modal.form.title) {
+        formData.append('title', modal.form.title);
+      }
+      if (modal.form.brief) {
+        formData.append('brief', modal.form.brief);
+      }
+      if (modal.form.detail) {
+        formData.append('detail', modal.form.detail);
       }
       if (modal.form.imageFile) {
         formData.append('imageFile', modal.form.imageFile);
       }
+
       if (modal.editFlag) {
         updateApi(formData)
           .then((res) => {
@@ -264,7 +298,7 @@ const handleOk = () => {
       }
     })
     .catch((err) => {
-      console.log('不能为空');
+      console.log('校验失败');
     });
 };
 

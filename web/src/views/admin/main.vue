@@ -12,13 +12,13 @@
     </a-layout-header>
     <a-layout>
       <a-layout-sider v-model="collapsed" collapsible>
-        <a-menu
-          style="overflow: auto; overflow-x: hidden"
-          v-model:selectedKeys="selectedKeys"
-          theme="dark"
-          mode="inline"
-          @click="handleClick"
-        >
+        <a-menu style="overflow: auto; overflow-x: hidden" v-model:selectedKeys="selectedKeys" theme="dark"
+          mode="inline" @click="handleClick">
+
+          <a-menu-item key="adminHistory">
+            <database-outlined />
+            <span>香山纪事</span>
+          </a-menu-item>
           <a-menu-item key="thing">
             <database-outlined />
             <span>景区管理</span>
@@ -92,120 +92,119 @@
   </a-layout>
 </template>
 <script setup lang="ts">
-  import { useRouter, useRoute } from 'vue-router';
-  import logo from '/@/assets/images/k-logo.png';
+import { useRouter, useRoute } from 'vue-router';
+import logo from '/@/assets/images/k-logo.png';
 
-  import {
-    HomeOutlined,
-    AppstoreOutlined,
-    FolderOutlined,
-    UserOutlined,
-    CommentOutlined,
-    InfoCircleOutlined,
-    TagOutlined,
-    PieChartOutlined,
-    DollarOutlined,
-    LayoutOutlined,
-    DatabaseOutlined,
-  } from '@ant-design/icons-vue';
+import {
+  HomeOutlined,
+  AppstoreOutlined,
+  FolderOutlined,
+  UserOutlined,
+  CommentOutlined,
+  InfoCircleOutlined,
+  TagOutlined,
+  PieChartOutlined,
+  DollarOutlined,
+  LayoutOutlined,
+  DatabaseOutlined,
+} from '@ant-design/icons-vue';
 
-  import { ref } from 'vue';
-  import { useUserStore } from '/@/store';
+import { ref } from 'vue';
+import { useUserStore } from '/@/store';
 
-  const userStore = useUserStore();
+const userStore = useUserStore();
 
-  const selectedKeys = ref<any[]>([]);
-  const collapsed = ref<boolean>(false);
+const selectedKeys = ref<any[]>([]);
+const collapsed = ref<boolean>(false);
 
-  const router = useRouter();
-  const route = useRoute();
+const router = useRouter();
+const route = useRoute();
 
-  const handleClick = ({ item, key, keyPath }) => {
-    console.log('点击路由===>', key);
-    router.push({
-      name: key,
-    });
-  };
-
-  const handlePreview = () => {
-    let text = router.resolve({ name: 'index' });
-    window.open(text.href, '_blank');
-  };
-
-  onMounted(() => {
-    console.log('当前路由===>', route.name);
-    selectedKeys.value = [route.name];
+const handleClick = ({ item, key, keyPath }) => {
+  console.log('点击路由===>', key);
+  router.push({
+    name: key,
   });
+};
 
-  const handleLogout = () => {
-    userStore.adminLogout().then((res) => {
-      router.push({ name: 'adminLogin' });
-    });
-  };
+const handlePreview = () => {
+  let text = router.resolve({ name: 'index' });
+  window.open(text.href, '_blank');
+};
+
+onMounted(() => {
+  console.log('当前路由===>', route.name);
+  selectedKeys.value = [route.name];
+});
+
+const handleLogout = () => {
+  userStore.adminLogout().then((res) => {
+    router.push({ name: 'adminLogin' });
+  });
+};
 </script>
 <style scoped lang="less">
-  // header样式
-  .header {
-    display: flex;
-    flex-direction: row;
-    align-items: center; // 垂直居中
-    padding-left: 24px;
-    padding-right: 24px;
+// header样式
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center; // 垂直居中
+  padding-left: 24px;
+  padding-right: 24px;
 
-    .header-logo {
-      width: 32px;
-      height: 32px;
-      cursor: pointer;
-    }
-
-    .header-title {
-      margin-left: 16px;
-      font-size: 20px;
-      font-weight: bold;
-      text-align: center;
-    }
-
-    .empty {
-      flex: 1;
-    }
-
-    .header-quit {
-      margin-left: 12px;
-    }
-  }
-
-  #components-layout-demo-custom-trigger {
-    height: 100%;
-  }
-
-  #components-layout-demo-custom-trigger .trigger {
-    font-size: 18px;
-    line-height: 64px;
-    padding: 0 24px;
+  .header-logo {
+    width: 32px;
+    height: 32px;
     cursor: pointer;
-    transition: color 0.3s;
   }
 
-  #components-layout-demo-custom-trigger .trigger:hover {
-    color: #1890ff;
+  .header-title {
+    margin-left: 16px;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
   }
 
-  :deep(.ant-layout-content) {
-    overflow-x: hidden;
+  .empty {
+    flex: 1;
   }
 
-  //:deep(.ant-layout-sider) {
-  //  padding: 16px 0;
-  //  background-color: #f0f2f5;
-  //}
-  //
-  //:deep(.ant-menu) {
-  //  padding-top: 16px;
-  //  height: 100%;
-  //}
-  //
-  //:deep(.ant-layout-sider-trigger) {
-  //  background-color: #fff;
-  //  height: 0px; // 故意设置0 隐藏
-  //}
-</style>
+  .header-quit {
+    margin-left: 12px;
+  }
+}
+
+#components-layout-demo-custom-trigger {
+  height: 100%;
+}
+
+#components-layout-demo-custom-trigger .trigger {
+  font-size: 18px;
+  line-height: 64px;
+  padding: 0 24px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+#components-layout-demo-custom-trigger .trigger:hover {
+  color: #1890ff;
+}
+
+:deep(.ant-layout-content) {
+  overflow-x: hidden;
+}
+
+//:deep(.ant-layout-sider) {
+//  padding: 16px 0;
+//  background-color: #f0f2f5;
+//}
+//
+//:deep(.ant-menu) {
+//  padding-top: 16px;
+//  height: 100%;
+//}
+//
+//:deep(.ant-layout-sider-trigger) {
+//  background-color: #fff;
+//  height: 0px; // 故意设置0 隐藏
+//}</style>

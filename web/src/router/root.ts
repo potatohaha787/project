@@ -139,6 +139,7 @@ const constantRouterMap = [
     children: [
       { path: 'overview', name: 'overview', component: () => import('/@/views/admin/overview.vue') },
       { path: 'order', name: 'order', component: () => import('/@/views/admin/order.vue') },
+      { path: 'adminHistory', name: 'adminHistory', component: () => import('/@/views/admin/adminHistory.vue') },
       { path: 'thing', name: 'thing', component: () => import('/@/views/admin/thing.vue') },
       { path: 'comment', name: 'comment', component: () => import('/@/views/admin/comment.vue') },
       { path: 'user', name: 'user', component: () => import('/@/views/admin/user.vue') },

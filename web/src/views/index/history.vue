@@ -11,12 +11,17 @@
     </div>
 
     <section class="full-history-section">
-      <div class="timeline-wrapper">
-        <div class="timeline-track">
-          <div class="timeline-item" v-for="(item, index) in historyList" :key="index"
-            :class="{ 'item-top': index % 2 === 0, 'item-bottom': index % 2 !== 0 }">
+      <div class="snake-timeline-wrapper">
+
+        <div v-for="(row, rIndex) in chunkedHistory" :key="rIndex" class="timeline-row"
+          :class="rIndex % 2 === 0 ? 'row-even' : 'row-odd'">
+          <div class="row-track"></div>
+
+          <div v-if="rIndex < chunkedHistory.length - 1" class="u-turn"></div>
+
+          <div class="timeline-item" v-for="item in row" :key="item.year">
             <div class="timeline-dot"></div>
-            <div class="timeline-stem"></div>
+
             <div class="timeline-content" @click="openDetail(item)">
               <div class="timeline-year">{{ item.year }}</div>
               <h3 class="timeline-event-title">{{ item.title }}</h3>
@@ -27,6 +32,7 @@
               <span class="read-more">查看详情 &rarr;</span>
             </div>
           </div>
+
         </div>
       </div>
     </section>
@@ -59,6 +65,8 @@ export default {
     return {
       detailVisible: false,
       currentHistory: null,
+      itemsPerRow: 3, // 默认每行展示 3 个事件
+      resizeTimer: null,
       historyList: [
         {
           year: '1152年', title: '香山立县',
@@ -105,12 +113,47 @@ export default {
       ]
     }
   },
-  methods: {
-    openDetail(item) { this.currentHistory = item; this.detailVisible = true; }
+  computed: {
+    // 核心算法：将一维数组根据屏幕大小切割成二维数组（每行N个）
+    chunkedHistory() {
+      const chunks = [];
+      for (let i = 0; i < this.historyList.length; i += this.itemsPerRow) {
+        chunks.push(this.historyList.slice(i, i + this.itemsPerRow));
+      }
+      return chunks;
+    }
   },
   mounted() {
-    // 进入新页面时自动滚动到最顶部
+    this.handleResize();
+    window.addEventListener('resize', this.onResize);
     window.scrollTo(0, 0);
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.onResize);
+  },
+  methods: {
+    openDetail(item) {
+      this.currentHistory = item;
+      this.detailVisible = true;
+    },
+    // 防抖处理窗口变化
+    onResize() {
+      if (this.resizeTimer) clearTimeout(this.resizeTimer);
+      this.resizeTimer = setTimeout(() => {
+        this.handleResize();
+      }, 100);
+    },
+    // 响应式重排算法
+    handleResize() {
+      const width = window.innerWidth;
+      if (width <= 768) {
+        this.itemsPerRow = 1; // 手机排1列
+      } else if (width <= 1024) {
+        this.itemsPerRow = 2; // 平板排2列
+      } else {
+        this.itemsPerRow = 3; // 电脑排3列
+      }
+    }
   }
 }
 </script>
@@ -119,6 +162,7 @@ export default {
 @primary-color: #0b6a65;
 @accent-color: #c59d5f;
 @bg-gray: #f3f4f6;
+@track-color: #d1d5db;
 
 .history-page {
   background-color: @bg-gray;
@@ -127,7 +171,6 @@ export default {
 
 .page-banner {
   position: relative;
-  /* 避开顶部固定导航栏的遮挡 */
   padding: 140px 20px 80px;
   background-image: url(/@/assets/images/bg.jpg);
   background-size: cover;
@@ -169,70 +212,123 @@ export default {
   background-color: @bg-gray;
 }
 
-/* 时间轴代码与首页完全一致 */
-.timeline-wrapper {
+/* =========================================
+   极致数学排版：S型蜿蜒时间轴 
+========================================= */
+
+.snake-timeline-wrapper {
   width: 100%;
-  overflow-x: auto;
-  padding: 250px 20px 300px;
+  padding: 80px 20px 100px;
   display: flex;
-  justify-content: flex-start;
-  scroll-behavior: smooth;
-}
-
-.timeline-wrapper::-webkit-scrollbar {
-  height: 6px;
-}
-
-.timeline-wrapper::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-}
-
-.timeline-track {
-  position: relative;
-  height: 2px;
-  background: #d1d5db;
-  display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  min-width: max-content;
-  margin: 0 auto;
-  padding: 0 40px;
+  /* 让整个时间轴在页面居中 */
+  overflow: hidden;
 }
 
-.timeline-item {
+/* 行容器基础 */
+.timeline-row {
+  display: flex;
+  gap: 40px;
+  /* 卡片之间的间距 */
+  margin-bottom: 60px;
+  /* 行与行之间的向下间距 */
   position: relative;
-  width: 250px;
-  margin: 0 30px;
+  /* 默认为PC端 3 列尺寸: (300*3) + (40*2) = 980px */
+  width: 980px;
 }
 
-.timeline-dot {
-  position: absolute;
-  top: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 14px;
-  height: 14px;
-  background: @bg-gray;
-  border: 3px solid @accent-color;
-  border-radius: 50%;
-  z-index: 2;
+/* 核心一：奇偶行方向交替 */
+.row-even {
+  flex-direction: row;
 }
 
-.timeline-stem {
+/* 偶数行：从左往右排 */
+.row-odd {
+  flex-direction: row-reverse;
+}
+
+/* 奇数行：从右往左排 */
+
+
+/* 核心二：横向轴线 */
+.row-track {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 2px;
-  height: 30px;
-  background: #d1d5db;
+  top: 15px;
+  /* 与中心点的黄圈圆心对齐 */
+  left: 150px;
+  /* 从第一个卡片的正中心开始 */
+  right: 150px;
+  /* 到最后一个卡片的正中心结束 */
+  height: 2px;
+  background: @track-color;
   z-index: 1;
 }
 
-.timeline-content {
+/* 核心三：精确计算的向下 U 型弯折线 */
+.u-turn {
   position: absolute;
-  left: 0;
-  width: 250px;
+  top: 15px;
+  width: 40px;
+  /* 半径宽度 */
+  /* 高度 = 100%容器高 + 60px向下间距 + 2px自身边框修正，完美触碰下一行轴线 */
+  height: calc(100% + 60px + 2px);
+  z-index: 1;
+  box-sizing: border-box;
+}
+
+/* 偶数行：向右走到头，向下弯折 */
+.row-even .u-turn {
+  right: 110px;
+  /* 150px(卡片中心) - 40px(半径) */
+  border-top: 2px solid @track-color;
+  border-right: 2px solid @track-color;
+  border-bottom: 2px solid @track-color;
+  border-radius: 0 40px 40px 0;
+  /* 右侧圆角 */
+}
+
+/* 奇数行：向左走到头，向下弯折 */
+.row-odd .u-turn {
+  left: 110px;
+  border-top: 2px solid @track-color;
+  border-left: 2px solid @track-color;
+  border-bottom: 2px solid @track-color;
+  border-radius: 40px 0 0 40px;
+  /* 左侧圆角 */
+}
+
+/* 核心四：单个卡片插槽 */
+.timeline-item {
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* 确保点和卡片中心对齐 */
+  position: relative;
+  z-index: 2;
+  /* 盖在轴线之上 */
+}
+
+/* 金色节点 */
+.timeline-dot {
+  width: 16px;
+  height: 16px;
+  background: @bg-gray;
+  border: 3px solid @accent-color;
+  border-radius: 50%;
+  margin-top: 8px;
+  /* 配合顶部15px的轨道，使圆心完美咬合在轨道上 */
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 2;
+  box-sizing: border-box;
+}
+
+/* 卡片内容样式保持你的极简风格 */
+.timeline-content {
+  width: 100%;
   background: #ffffff;
   border-radius: 12px;
   padding: 18px;
@@ -240,14 +336,19 @@ export default {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
   cursor: pointer;
   transition: all 0.3s ease;
-  box-sizing: border-box;
+  text-align: left;
 
   &:hover {
     border-color: @primary-color;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    transform: translateY(-5px);
 
     .timeline-img {
       transform: scale(1.05);
+    }
+
+    .read-more {
+      letter-spacing: 1px;
     }
   }
 
@@ -302,32 +403,25 @@ export default {
   }
 }
 
-.item-top {
-  .timeline-stem {
-    bottom: 0;
-  }
+/* =========================================
+   响应式宽度自适应 (完美支持各种屏幕) 
+========================================= */
+@media (max-width: 1024px) {
 
-  .timeline-content {
-    bottom: 30px;
-
-    &:hover {
-      transform: translateY(-5px);
-    }
+  /* 平板端 2 列尺寸: (300*2) + (40*1) = 640px */
+  .timeline-row {
+    width: 640px;
   }
 }
 
-.item-bottom {
-  .timeline-stem {
-    top: 0;
+@media (max-width: 768px) {
+
+  /* 手机端 1 列尺寸: 300px */
+  .timeline-row {
+    width: 300px;
   }
 
-  .timeline-content {
-    top: 30px;
-
-    &:hover {
-      transform: translateY(-5px);
-    }
-  }
+  /* 手机由于只有单列，轨道线自动消隐，变成一条精美的垂中蛇形虚线 */
 }
 
 /* 弹窗代码 */
