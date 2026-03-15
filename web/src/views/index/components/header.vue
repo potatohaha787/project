@@ -6,12 +6,13 @@
     </div>
 
     <nav class="main-nav hidden-sm">
-      <a class="nav-item active">首页</a>
-      <a class="nav-item" @click="goUserCenter('history')">香山纪事</a>
-      <a class="nav-item">景点探索</a>
-      <a class="nav-item">非遗文化</a>
-      <a class="nav-item">香山美食</a>
-      <a class="nav-item">游记攻略</a>
+      <a class="nav-item" :class="{ 'active': route.name === 'portal' }"
+        @click="$router.push({ name: 'portal' })">首页</a>
+      <a class="nav-item" :class="{ 'active': route.name === 'history' }" @click="goUserCenter('history')">香山纪事</a>
+      <a class="nav-item" :class="{ 'active': route.name === 'thing' }" @click="goUserCenter('thing')">景点探索</a>
+      <a class="nav-item" :class="{ 'active': route.name === 'culture' }">非遗文化</a>
+      <a class="nav-item" :class="{ 'active': route.name === 'food' }">香山美食</a>
+      <a class="nav-item" :class="{ 'active': route.name === 'guide' }">游记攻略</a>
     </nav>
 
     <div class="search-entry">
@@ -50,13 +51,11 @@
   </div>
 </template>
 
-
 <script setup lang="ts">
-//导入依赖
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { listApi } from '/@/api/notice'
-import { useUserStore } from "/@/store"; //状态管理
+import { useUserStore } from "/@/store";
 import logoImage from '/@/assets/images/logo1.png';
 import SearchIcon from '/@/assets/images/search-icon.svg';
 import AvatarIcon from '/@/assets/images/avatar.jpg';
@@ -66,22 +65,19 @@ const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
 
-const keywordRef = ref(); // 搜索框
-let loading = ref(false);  // 加载状态
-let msgVisible = ref(false);  // 消息弹窗
-let msgData = ref([] as any);  // 消息列表
-let isScrolled = ref(false);   // 是否滚动
+const keywordRef = ref();
+let loading = ref(false);
+let msgVisible = ref(false);
+let msgData = ref([] as any);
+let isScrolled = ref(false);
 
-// 【核心逻辑】：判断当前是否在首页，如果路由名是 portal，即为首页
 const isHome = computed(() => route.name === 'portal');
 
-//初始化时获取消息列表并添加滚动监听
 onMounted(() => {
   getMessageList();
   window.addEventListener('scroll', handleScroll);
 });
 
-//组件销毁时移除滚动监听
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll);
 });
@@ -93,7 +89,8 @@ const handleScroll = () => {
 const getMessageList = () => { };
 const search = () => { };
 const goLogin = () => { router.push({ name: 'login' }) };
-const goUserCenter = (menuName) => { router.push({ name: menuName }) };
+// 跳转页面的通用方法
+const goUserCenter = (menuName: string) => { router.push({ name: menuName }) };
 const quit = () => { userStore.logout().then(res => { router.push({ name: 'portal' }) }) };
 const onClose = () => { msgVisible.value = false; };
 </script>
@@ -144,7 +141,7 @@ const onClose = () => { msgVisible.value = false; };
   }
 
   .icon-filter {
-    filter: brightness(0) invert(1); // 把黑色图标变白
+    filter: brightness(0) invert(1);
   }
 }
 
@@ -179,7 +176,6 @@ const onClose = () => { msgVisible.value = false; };
     filter: none;
   }
 }
-
 
 /* 以下是基础排版样式 */
 .logo {

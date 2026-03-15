@@ -58,7 +58,7 @@
 <script>
 import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
-// 1. 引入我们之前写好的 API 请求接口和全局基础URL
+// 1. 引入拉取数据的 API 和常量
 import { listApi } from '/@/api/history'
 import { BASE_URL } from "/@/store/constants"
 
@@ -68,14 +68,13 @@ export default {
     return {
       detailVisible: false,
       currentHistory: null,
-      itemsPerRow: 3, // 默认每行展示 3 个事件
+      itemsPerRow: 3,
       resizeTimer: null,
-      // 2. 清空写死的数据，变成空数组，等待接口返回数据填充
+      // 2. 清空写死的假数据
       historyList: []
     }
   },
   computed: {
-    // 核心算法：将一维数组根据屏幕大小切割成二维数组（每行N个）
     chunkedHistory() {
       const chunks = [];
       for (let i = 0; i < this.historyList.length; i += this.itemsPerRow) {
@@ -85,7 +84,7 @@ export default {
     }
   },
   mounted() {
-    // 3. 页面一挂载，就去向后端请求真实的数据库数据
+    // 3. 页面加载时调用接口拿数据
     this.getHistoryData();
 
     this.handleResize();
@@ -96,25 +95,23 @@ export default {
     window.removeEventListener('resize', this.onResize);
   },
   methods: {
-    // 4. 新增：向后台请求数据的方法
+    // 4. 新增：向后台请求真实数据
     getHistoryData() {
       listApi({}).then(res => {
         if (res.code === 200) {
           let dbData = res.data;
 
-          // 对后台返回的数据进行预处理
           dbData.forEach(item => {
-            // A. 处理图片路径：如果是本地上传的图片(没有http开头)，则拼接上后台服务器的地址
+            // 处理图片地址
             if (item.image && !item.image.startsWith('http')) {
               item.image = BASE_URL + '/api/staticfiles/image/' + item.image;
             }
 
-            // B. 处理详细内容：数据库里存的是像 '["段落1", "段落2"]' 这样的字符串，需要转成真实的 JS 数组
+            // 处理 JSON 数组格式的段落
             if (item.detail && typeof item.detail === 'string') {
               try {
                 item.detail = JSON.parse(item.detail);
               } catch (e) {
-                // 如果解析失败(比如存的不是严格的JSON)，就直接把它包在一个数组里
                 item.detail = [item.detail];
               }
             } else if (!item.detail) {
@@ -122,11 +119,16 @@ export default {
             }
           });
 
-          // 把处理好的真实数据赋值给页面的变量，页面会瞬间自动渲染出S型时间线！
+          // 按照后台设定的排序号进行升序排列
+          dbData.sort((a, b) => {
+            return (a.sortOrder || 0) - (b.sortOrder || 0);
+          });
+
+          // 赋值渲染
           this.historyList = dbData;
         }
       }).catch(err => {
-        console.error("获取香山纪事数据失败：", err);
+        console.error("获取完整香山纪事数据失败：", err);
       });
     },
 
@@ -134,22 +136,20 @@ export default {
       this.currentHistory = item;
       this.detailVisible = true;
     },
-    // 防抖处理窗口变化
     onResize() {
       if (this.resizeTimer) clearTimeout(this.resizeTimer);
       this.resizeTimer = setTimeout(() => {
         this.handleResize();
       }, 100);
     },
-    // 响应式重排算法
     handleResize() {
       const width = window.innerWidth;
       if (width <= 768) {
-        this.itemsPerRow = 1; // 手机排1列
+        this.itemsPerRow = 1;
       } else if (width <= 1024) {
-        this.itemsPerRow = 2; // 平板排2列
+        this.itemsPerRow = 2;
       } else {
-        this.itemsPerRow = 3; // 电脑排3列
+        this.itemsPerRow = 3;
       }
     }
   }
