@@ -70,6 +70,9 @@
 import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
 import Content from '/@/views/index/components/content.vue'
+// 1. 引入刚才写好的 API 请求接口和常量
+import { listApi } from '/@/api/history'
+import { BASE_URL } from "/@/store/constants"
 
 export default {
   components: { Footer, Header, Content },
@@ -77,59 +80,54 @@ export default {
     return {
       detailVisible: false,
       currentHistory: null,
-      historyList: [
-        {
-          year: '1152年',
-          title: '香山立县',
-          brief: '南宋绍兴二十二年，正式设立香山县，开启了独立行政建制的历史序幕。',
-          image: 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          detail: [
-            '南宋绍兴二十二年（1152年），由东莞县划出香山镇，正式设立香山县。在此之前，这里曾是盛产海盐和香木的海岛。',
-            '立县标志着香山地区在政治、经济、文化上迈入了新的发展阶段。香山之名，来源于境内五桂山“奇花异卉，神仙茶隔水闻香”。'
-          ]
-        },
-        {
-          year: '1866年',
-          title: '伟人诞生',
-          brief: '中国民主革命的伟大先驱孙中山先生在香山县翠亨村诞生。',
-          image: 'https://images.unsplash.com/photo-1583884826131-063989c44d18?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          detail: [
-            '1866年11月12日，孙中山先生出生于广东省香山县（今中山市）南朗镇翠亨村。',
-            '作为中国近代民主革命的伟大先行者，他的“天下为公”精神至今仍激励着无数中山人。'
-          ]
-        },
-        {
-          year: '1925年',
-          title: '纪念伟人，更名中山',
-          brief: '为纪念在此诞生的伟大先驱孙中山先生，香山县易名为中山县。',
-          image: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          detail: [
-            '1925年4月15日，为了纪念刚刚在北京逝世的中国民主革命伟大先驱孙中山先生，广州大元帅府下令将香山县更名为中山县。'
-          ]
-        },
-        {
-          year: '1988年',
-          title: '升格地级市',
-          brief: '中山正式升格为地级市，跻身“广东四小虎”，经济步入快车道。',
-          image: 'https://images.unsplash.com/photo-1582269438706-e7c65ba443c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          detail: [
-            '1988年1月，中山升格为地级市。乘着改革开放的春风，中山市大力发展乡镇企业，创造了闻名全国的“中山模式”。'
-          ]
-        },
-        // 后面的数据虽然写了，但因为上面的 slice(0, 4)，首页不会显示，只有跳转新页面后才显示
-        {
-          year: '2024年',
-          title: '深中通道通车',
-          brief: '世纪工程深中通道正式建成通车，大湾区一小时生活圈形成。',
-          image: 'https://images.unsplash.com/photo-1561081498-8ddc0eb09e20?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          detail: [
-            '深中通道是集“桥、岛、隧、水下互通”于一体的跨海集群工程。通车后，从中山到深圳的车程由2小时缩短至不到30分钟。'
-          ]
-        }
-      ]
+      // 2. 清空写死的数据，变成空数组
+      historyList: []
     }
   },
+  // 3. 页面加载时调用接口拿数据
+  mounted() {
+    this.getHistoryData();
+  },
   methods: {
+    // 4. 新增获取数据库历史数据的方法
+    getHistoryData() {
+      listApi({}).then(res => {
+        if (res.code === 200) {
+          let dbData = res.data;
+
+          // 对后台返回的数据进行预处理
+          dbData.forEach(item => {
+            // A. 处理图片路径：如果是本地上传的图片(没有http开头)，则拼接上后台服务器的地址
+            if (item.image && !item.image.startsWith('http')) {
+              item.image = BASE_URL + '/api/staticfiles/image/' + item.image;
+            }
+
+            // B. 处理详细内容：把 JSON 字符串转成数组，用于弹窗多段落显示
+            if (item.detail && typeof item.detail === 'string') {
+              try {
+                item.detail = JSON.parse(item.detail);
+              } catch (e) {
+                item.detail = [item.detail];
+              }
+            } else if (!item.detail) {
+              item.detail = [];
+            }
+          });
+
+          // C. 按照之前设置的 sort_order 从小到大排序 (可选，保证首页和内页顺序一致)
+          dbData.sort((a, b) => {
+            return (a.sortOrder || 0) - (b.sortOrder || 0);
+          });
+
+          // 赋值给页面变量
+          // 注意：模板里写了 historyList.slice(0, 4)，所以这里哪怕存入几十条，页面也只会显示前4条！
+          this.historyList = dbData;
+        }
+      }).catch(err => {
+        console.error("获取首页香山纪事数据失败：", err);
+      });
+    },
+
     scrollToTimeline() {
       const el = document.getElementById('history-timeline');
       if (el) { window.scrollTo({ top: el.offsetTop - 64, behavior: 'smooth' }); }
@@ -138,7 +136,7 @@ export default {
       this.currentHistory = item;
       this.detailVisible = true;
     },
-    // 新增：跳转到完整的历史时间线页面
+    // 跳转到完整的历史时间线页面
     goToFullHistory() {
       this.$router.push({ name: 'history' });
     }
@@ -236,6 +234,7 @@ export default {
   margin-top: 0;
   padding: 60px 0 60px;
   background-color: @bg-gray;
+
   position: relative;
   z-index: 10;
 

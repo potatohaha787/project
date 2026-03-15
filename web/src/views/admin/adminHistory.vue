@@ -82,7 +82,7 @@ import { FormInstance, message } from 'ant-design-vue';
 import { createApi, listApi, updateApi, deleteApi } from '/@/api/history';
 import { BASE_URL } from "/@/store/constants";
 
-const columns = reactive<TableColumnsType>([
+const columns = reactive([
   {
     title: '序号',
     dataIndex: 'index',
@@ -105,14 +105,14 @@ const columns = reactive<TableColumnsType>([
     title: '图片',
     dataIndex: 'imageUrl',
     key: 'imageUrl',
-    align: 'center' as const,
+    align: 'center',
   },
   {
     title: '操作',
     dataIndex: 'action',
     key: 'operation',
-    align: 'center' as const,
-    fixed: 'right' as const,
+    align: 'center',
+    fixed: 'right',
     width: 140,
   },
 ]);

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.TableField;
+import org.springframework.web.multipart.MultipartFile;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -22,5 +23,7 @@ public class History implements Serializable {
     @TableField
     private String image;
     @TableField
-    private String detail; // 数据库里是JSON字符串
+    private String detail;
+    @TableField(exist = false)
+    private MultipartFile imageFile;
 }

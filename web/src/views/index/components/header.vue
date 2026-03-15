@@ -7,6 +7,7 @@
 
     <nav class="main-nav hidden-sm">
       <a class="nav-item active">首页</a>
+      <a class="nav-item" @click="goUserCenter('history')">香山纪事</a>
       <a class="nav-item">景点探索</a>
       <a class="nav-item">非遗文化</a>
       <a class="nav-item">香山美食</a>
