@@ -1,0 +1,8 @@
+package com.gk.study.mapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.gk.study.entity.Celebrity;
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface CelebrityMapper extends BaseMapper<Celebrity> {
+}

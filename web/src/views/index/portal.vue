@@ -25,8 +25,7 @@
 
       <div class="timeline-wrapper">
         <div class="timeline-track">
-          <div class="timeline-item" v-for="(item, index) in historyList.slice(0, 4)" :key="index"
-            :class="{ 'item-top': index % 2 === 0, 'item-bottom': index % 2 !== 0 }">
+          <div class="timeline-item" v-for="(item, index) in historyList.slice(0, 4)" :key="index">
             <div class="timeline-dot"></div>
             <div class="timeline-stem"></div>
 
@@ -44,6 +43,9 @@
       </div>
     </section>
 
+
+
+
     <a-modal v-model:visible="detailVisible" :title="null" :footer="null" :width="680" :centered="true"
       class="history-modal">
       <div v-if="currentHistory" class="modal-body">
@@ -58,6 +60,8 @@
       </div>
     </a-modal>
 
+
+    <Story />
     <div class="portal-content" id="portal-main-content">
       <Content />
     </div>
@@ -68,6 +72,7 @@
 
 <script>
 import Header from '/@/views/index/components/header.vue'
+import Story from '/@/views/index/components/story.vue'
 import Footer from '/@/views/index/components/footer.vue'
 import Content from '/@/views/index/components/content.vue'
 // 1. 引入刚才写好的 API 请求接口和常量
@@ -75,7 +80,7 @@ import { listApi } from '/@/api/history'
 import { BASE_URL } from "/@/store/constants"
 
 export default {
-  components: { Footer, Header, Content },
+  components: { Footer, Header, Story, Content },
   data() {
     return {
       detailVisible: false,
@@ -146,7 +151,7 @@ export default {
 
 <style scoped lang="less">
 @primary-color: #0b6a65;
-@accent-color: #c59d5f;
+@accent-color: #d29841;
 @bg-gray: #f3f4f6;
 
 .hero-banner {
@@ -294,7 +299,7 @@ export default {
 .timeline-wrapper {
   width: 100%;
   overflow-x: auto;
-  padding: 380px 20px;
+  padding: 385px 20px 20px;
   display: flex;
   justify-content: flex-start;
   scroll-behavior: smooth;
@@ -348,11 +353,13 @@ export default {
   height: 30px;
   background: #d1d5db;
   z-index: 1;
+  bottom: 0;
 }
 
 .timeline-content {
   position: absolute;
   left: 0;
+  height: 350px;
   width: 250px;
   background: #ffffff;
   border-radius: 12px;
@@ -363,9 +370,14 @@ export default {
   transition: all 0.3s ease;
   box-sizing: border-box;
 
+  bottom: 30px;
+  /* 新增这一行：将卡片固定在竖线正上方 */
+
   &:hover {
     border-color: @primary-color;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    transform: translateY(-5px);
+    /* 新增：把之前 .item-top 里的悬浮动画移到这里 */
 
     .timeline-img {
       transform: scale(1.05);
@@ -408,14 +420,13 @@ export default {
     font-size: 13px;
     color: #6b7280;
     line-height: 1.6;
-    margin-bottom: 12px;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
     overflow: hidden;
   }
 
   .read-more {
+    //position: absolute;
+    bottom: 18px;
+    left: 18px;
     font-size: 13px;
     color: @primary-color;
     font-weight: 600;
@@ -423,33 +434,6 @@ export default {
   }
 }
 
-.item-top {
-  .timeline-stem {
-    bottom: 0;
-  }
-
-  .timeline-content {
-    bottom: 30px;
-
-    &:hover {
-      transform: translateY(-5px);
-    }
-  }
-}
-
-.item-bottom {
-  .timeline-stem {
-    top: 0;
-  }
-
-  .timeline-content {
-    top: 30px;
-
-    &:hover {
-      transform: translateY(-5px);
-    }
-  }
-}
 
 :deep(.history-modal) {
   .ant-modal-content {

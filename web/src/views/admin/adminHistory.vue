@@ -105,14 +105,14 @@ const columns = reactive([
     title: '图片',
     dataIndex: 'imageUrl',
     key: 'imageUrl',
-    align: 'center',
+    align: 'center' as const,
   },
   {
     title: '操作',
     dataIndex: 'action',
     key: 'operation',
-    align: 'center',
-    fixed: 'right',
+    align: 'center' as const,
+    fixed: 'right' as const,
     width: 140,
   },
 ]);
