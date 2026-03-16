@@ -9,7 +9,7 @@
     </div>
 
     <div class="story-layout">
-      <div class="featured-story" v-if="featuredStory" @click="openStory(featuredStory.id)">
+      <div class="featured-story" v-if="featuredStory" @click="openStory(featuredStory)">
         <img :src="featuredStory.image" alt="主推人物" class="featured-img">
         <div class="featured-overlay">
           <div class="quote" v-if="featuredStory.tags">“{{ featuredStory.tags }}”</div>
@@ -20,7 +20,7 @@
       <div class="featured-story skeleton-box" v-else></div>
 
       <div class="side-stories" v-if="sideStories.length > 0">
-        <div class="story-item" v-for="(item, index) in sideStories" :key="index" @click="openStory(item.id)">
+        <div class="story-item" v-for="(item, index) in sideStories" :key="index" @click="openStory(item)">
           <div class="story-img-box">
             <img :src="item.image" alt="人物图" class="story-img">
           </div>
@@ -76,9 +76,14 @@ onMounted(() => {
   getCelebrityData()
 })
 
-const openStory = (id) => {
-  if (!id) return;
-  router.push({ path: '/celebrity/detail', query: { id: id } })
+const openStory = (story) => {
+  router.push({
+    name: 'celebrity',
+    query: {
+      id: story?.id || '',
+      title: story?.title || ''
+    }
+  })
 }
 </script>
 

@@ -15,4 +15,8 @@ public class CelebrityServiceImpl extends ServiceImpl<CelebrityMapper, Celebrity
         queryWrapper.orderByAsc("create_time"); // 按照创建时间排序
         return this.baseMapper.selectList(queryWrapper);
     }
+    @Override
+    public Celebrity getCelebrityDetail(Long id) {
+        return this.baseMapper.selectById(id);
+    }
 }
