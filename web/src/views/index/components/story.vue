@@ -78,10 +78,9 @@ onMounted(() => {
 
 const openStory = (story) => {
   router.push({
-    name: 'celebrity',
-    query: {
-      id: story?.id || '',
-      title: story?.title || ''
+    name: 'celebrityDetail',
+    params: {
+      id: story?.id || ''
     }
   })
 }

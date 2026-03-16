@@ -52,7 +52,8 @@ const detailParagraphs = computed(() => {
 })
 
 const loadDetail = async () => {
-  const id = route.params.id || route.query.id
+  // 确保 id 是单个字符串类型，避免 TS 报错标红
+  const id = (route.params.id || route.query.id) as string
   if (!id) return
 
   const res = await detailApi({ id })
