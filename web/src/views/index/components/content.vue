@@ -2,15 +2,13 @@
   <div class="explore-container">
     <div class="explore-layout">
       <div class="left-title-area">
-        <div class="more-btn" @click="goToSearch('')">
-          更多详情
-        </div>
         <div class="vertical-title-container">
+          <span class="sub-title">Explore the Charming Xiangshan</span>
           <h2 class="main-title">
             玩转魅力香山
             <span class="deco-triangle">▼</span>
           </h2>
-          <span class="sub-title">Explore the Charming Xiangshan</span>
+
         </div>
       </div>
 
@@ -38,46 +36,46 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import bgImage1 from '/@/assets/images/bg.jpg'
+import bgImage2 from '/@/assets/images/culture.jpg'
+import bgImage3 from '/@/assets/images/food.jpg'
+import bgImage4 from '/@/assets/images/place.jpg'
 
 const router = useRouter()
 
-// 跳转到搜索/列表页面，可附带分类ID (此处预留了分类跳转功能)
-const goToSearch = (categoryId) => {
-  router.push({ path: '/search', query: { c: categoryId } })
-}
 
 // 卡片数据配置 (图标使用内联SVG保证稳定显示)
 const cards = [
   {
     id: '1',
-    title: '香山纪事',
-    en: 'Stories',
-    bg: '/images/demo.jpg', // 使用您 public 目录下的现有图片
+    title: '景点探索',
+    en: 'Scenic',
+    bg: bgImage1,
     overlayColor: 'rgba(105, 128, 105, 0.85)', // 复古绿
     icon: `<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`
   },
   {
     id: '2',
-    title: '文创礼品',
-    en: 'Gifts',
-    bg: '/images/bg2.jpg',
+    title: '非遗文化',
+    en: 'Culture',
+    bg: bgImage2,
     overlayColor: 'rgba(176, 126, 68, 0.85)', // 琥珀黄
     icon: `<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>`
   },
   {
     id: '3',
-    title: '特色商铺',
-    en: 'Mall',
-    bg: '/images/demo.jpg',
-    overlayColor: 'rgba(62, 114, 130, 0.85)', // 黛蓝
+    title: '香山美食',
+    en: 'Food',
+    bg: bgImage3,
+    overlayColor: 'rgba(76, 134, 141, 0.85)', // 黛蓝
     icon: `<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h18v4H3z"></path><path d="M4 7l-1 14h18l-1-14"></path><path d="M9 7v14"></path><path d="M15 7v14"></path></svg>`
   },
   {
     id: '4',
-    title: '民宿酒店',
-    en: 'Stay',
-    bg: '/images/bg2.jpg',
-    overlayColor: 'rgba(74, 83, 75, 0.85)', // 墨青
+    title: '游记攻略',
+    en: 'Torism',
+    bg: bgImage4,
+    overlayColor: 'rgba(142, 105, 140, 0.85)', // 墨青
     icon: `<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`
   }
 ]
@@ -108,6 +106,7 @@ const cards = [
   height: 480px;
   display: flex;
   justify-content: flex-end;
+  color: rgba(142, 105, 140, 0.85);
 }
 
 .vertical-title-container {
@@ -144,26 +143,6 @@ const cards = [
   opacity: 0.8;
 }
 
-.more-btn {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  writing-mode: vertical-rl;
-  background-color: #c09b62;
-  color: #fff;
-  padding: 24px 10px;
-  font-size: 14px;
-  letter-spacing: 4px;
-  cursor: pointer;
-  border-radius: 2px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(192, 155, 98, 0.3);
-
-  &:hover {
-    background-color: #a88550;
-    transform: translateX(-3px);
-  }
-}
 
 /* === 右侧卡片区域 === */
 .right-cards-area {

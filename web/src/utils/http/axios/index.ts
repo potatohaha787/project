@@ -4,7 +4,7 @@ import { showMessage } from './status';
 import { IResponse } from './type';
 import { getToken } from '/@/utils/auth';
 import { TokenPrefix } from '/@/utils/auth';
-import {ADMIN_USER_TOKEN, USER_TOKEN, BASE_URL} from '/@/store/constants'
+import { ADMIN_USER_TOKEN, USER_TOKEN, BASE_URL } from '/@/store/constants'
 
 const service: AxiosInstance = axios.create({
   // baseURL: import.meta.env.BASE_URL + '',
@@ -27,12 +27,13 @@ service.interceptors.request.use(
 );
 
 // axios实例拦截响应
+// axios实例拦截响应
 service.interceptors.response.use(
   (response: AxiosResponse) => {
-    if(response.status == 200) {
-      if(response.data.code == 0 || response.data.code == 200) {
+    if (response.status == 200) {
+      if (response.data.code == 0 || response.data.code == 200) {
         return response
-      }else {
+      } else {
         return Promise.reject(response.data)
       }
     } else {
@@ -41,11 +42,16 @@ service.interceptors.response.use(
   },
   // 请求失败
   (error: any) => {
-    console.log(error.response.status)
-    if(error.response.status == 404) {
-      // todo
-    } else if(error.response.status == 403) {
-      // todo
+    // <==== 修改这里：先判断 error.response 是否存在
+    if (error.response) {
+      console.log(error.response.status)
+      if (error.response.status == 404) {
+        // todo
+      } else if (error.response.status == 403) {
+        // todo
+      }
+    } else {
+      console.log('网络或跨域错误:', error.message)
     }
     return Promise.reject(error)
   },

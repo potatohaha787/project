@@ -9,7 +9,7 @@
     </div>
 
     <div class="story-layout">
-      <div class="featured-story" v-if="featuredStory" @click="openStory(featuredStory.title)">
+      <div class="featured-story" v-if="featuredStory" @click="openStory(featuredStory.id)">
         <img :src="featuredStory.image" alt="主推人物" class="featured-img">
         <div class="featured-overlay">
           <div class="quote" v-if="featuredStory.tags">“{{ featuredStory.tags }}”</div>
@@ -20,7 +20,7 @@
       <div class="featured-story skeleton-box" v-else></div>
 
       <div class="side-stories" v-if="sideStories.length > 0">
-        <div class="story-item" v-for="(item, index) in sideStories" :key="index">
+        <div class="story-item" v-for="(item, index) in sideStories" :key="index" @click="openStory(item.id)">
           <div class="story-img-box">
             <img :src="item.image" alt="人物图" class="story-img">
           </div>
@@ -76,8 +76,9 @@ onMounted(() => {
   getCelebrityData()
 })
 
-const openStory = (name) => {
-  console.log('点击了人物：', name)
+const openStory = (id) => {
+  if (!id) return;
+  router.push({ path: '/celebrity/detail', query: { id: id } })
 }
 </script>
 
@@ -183,6 +184,7 @@ const openStory = (name) => {
       font-family: 'Noto Serif SC', serif;
       font-size: 24px;
       color: @accent-color;
+      font-weight: 700;
       margin-bottom: 12px;
       font-style: italic;
     }
