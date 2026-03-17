@@ -110,7 +110,6 @@ const cards = [
 }
 
 .vertical-title-container {
-  /* 竖向排版核心 */
   writing-mode: vertical-rl;
   text-orientation: mixed;
   height: 100%;
@@ -121,8 +120,8 @@ const cards = [
   font-size: 36px;
   font-weight: 700;
   color: #2c2c2c;
-  letter-spacing: 8px;
-  margin: 0;
+  letter-spacing: 15px;
+  margin-right: 20px;
   display: flex;
   align-items: center;
 
@@ -135,11 +134,9 @@ const cards = [
 
 .sub-title {
   font-family: 'Times New Roman', Times, serif;
-  font-size: 14px;
+  font-size: 12px;
   color: #666;
-  letter-spacing: 2px;
-  margin-right: 16px;
-  /* 竖向排版中，右边距等于视觉的左边距 */
+  letter-spacing: 4px;
   opacity: 0.8;
 }
 
