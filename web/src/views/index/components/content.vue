@@ -83,7 +83,7 @@ const cards = [
 
 <style scoped lang="less">
 .explore-container {
-  background-color: #f3f4f6;
+  background-color: #F8F7F3;
   /* 宣纸质感的米白色背景 */
   padding: 80px 0 100px;
   min-height: 700px;

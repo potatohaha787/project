@@ -9,8 +9,9 @@
       <a class="nav-item" :class="{ 'active': route.name === 'portal' }"
         @click="$router.push({ name: 'portal' })">首页</a>
       <a class="nav-item" :class="{ 'active': route.name === 'history' }" @click="goUserCenter('history')">香山纪事</a>
-      <a class="nav-item" :class="{ 'active': route.name === 'celebrity' }" @click="goUserCenter('celebrity')">名人故事</a>
-      <a class="nav-item" :class="{ 'active': route.name === 'thing' }" @click="goUserCenter('thing')">景点探索</a>
+      <a class="nav-item" :class="{ 'active': route.name === 'celebrity' || route.name === 'celebrityDetail' }"
+        @click="goUserCenter('celebrity')">名人故事</a>
+      <a class="nav-item" :class="{ 'active': route.name === 'scenic' }" @click="goUserCenter('scenic')">景点探索</a>
       <a class="nav-item" :class="{ 'active': route.name === 'culture' }">非遗文化</a>
       <a class="nav-item" :class="{ 'active': route.name === 'food' }">香山美食</a>
       <a class="nav-item" :class="{ 'active': route.name === 'guide' }">游记攻略</a>

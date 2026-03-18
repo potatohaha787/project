@@ -19,6 +19,10 @@
             <database-outlined />
             <span>香山纪事</span>
           </a-menu-item>
+          <a-menu-item key="adminCelebrity">
+            <user-outlined />
+            <span>名人故事</span>
+          </a-menu-item>
           <a-menu-item key="thing">
             <database-outlined />
             <span>景区管理</span>

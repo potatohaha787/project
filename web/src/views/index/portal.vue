@@ -152,7 +152,7 @@ export default {
 <style scoped lang="less">
 @primary-color: #0b6a65;
 @accent-color: #d29841;
-@bg-gray: #f3f4f6;
+@bg-gray: #F8F7F3;
 
 .hero-banner {
   position: relative;

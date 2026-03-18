@@ -32,19 +32,14 @@ const constantRouterMap = [
         component: () => import('/@/views/index/history.vue')
       },
       {
-        path: '/celebrity',
+        path: 'celebrity',
         name: 'celebrity',
-        component: () => import('/@/views/index/celebrity.vue'),
+        component: () => import('/@/views/index/celebrity.vue')
       },
       {
         path: 'celebrity/:id',
         name: 'celebrityDetail',
         component: () => import('/@/views/index/celebrity-detail.vue')
-      },
-      {
-        path: '/celebrity/detail',
-        name: 'celebrity-detail',
-        component: () => import('/@/views/index/celebrity-detail.vue'),
       },
       {
         path: 'detail',
@@ -118,6 +113,11 @@ const constantRouterMap = [
             component: () => import('/@/views/index/user/score-view.vue')
           },
           {
+            path: 'scenic',
+            name: 'scenic',
+            component: () => import('/@/views/index/scenic.vue')
+          },
+          {
             path: 'commentView',
             name: 'commentView',
             component: () => import('/@/views/index/user/comment-view.vue')
@@ -154,6 +154,7 @@ const constantRouterMap = [
     children: [
       { path: 'overview', name: 'overview', component: () => import('/@/views/admin/overview.vue') },
       { path: 'order', name: 'order', component: () => import('/@/views/admin/order.vue') },
+      { path: 'adminCelebrity', name: 'adminCelebrity', component: () => import('/@/views/admin/celebrity.vue') },
       { path: 'adminHistory', name: 'adminHistory', component: () => import('/@/views/admin/adminHistory.vue') },
       { path: 'thing', name: 'thing', component: () => import('/@/views/admin/thing.vue') },
       { path: 'comment', name: 'comment', component: () => import('/@/views/admin/comment.vue') },

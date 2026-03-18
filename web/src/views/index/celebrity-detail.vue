@@ -3,7 +3,7 @@
     <Header />
 
     <section class="detail-hero" v-if="detail">
-      <img class="hero-bg" :src="detail.image" :alt="detail.title" />
+      <img class="hero-bg" :src="detail.heroBg" :alt="detail.title" />
       <div class="hero-mask"></div>
 
       <div class="hero-content">
@@ -24,7 +24,9 @@
         <div class="text-info">
           <div class="info-block">
             <h2>基本信息</h2>
-            <p><strong>出生年月：</strong> {{ detail.birth || '暂无数据' }}</p>
+            <p><strong>出生地：</strong> {{ detail.birthplace || '暂无数据' }}</p>
+            <p><strong>出生日期：</strong> {{ detail.birthDate || '暂无数据' }}</p>
+            <p v-if="detail.deathDate"><strong>逝世日期：</strong> {{ detail.deathDate }}</p>
           </div>
 
           <div class="info-block" v-if="detail.achievements">
@@ -40,7 +42,7 @@
       </div>
     </section>
 
-    <section class="detail-content" v-else>
+    <section class="detail-content" v-else-if="!loading">
       <h2>加载中或未找到对应人物</h2>
       <p>请返回首页重新选择人物卡片。</p>
     </section>
@@ -54,44 +56,67 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
+import homeBgImage from '/@/assets/images/bg4.jpg' // 默认背景图
 
-// 【关键修改 1】：在这里主动引入首页的背景图（假设是 bg.jpg，如果是另一张可以换成 bg2.jpg）
-import homeBgImage from '/@/assets/images/bg2.jpg'
+// 引入写好的API和基础图片路径配置
+import { listApi } from '/@/api/celebrity'
+import { BASE_URL } from "/@/store/constants"
 
 const route = useRoute()
 const detail = ref<any>(null)
+const loading = ref(true)
 
-// 处理详情文本的换行/数组
+// 处理详情文本的换行 (支持 JSON 数组格式或普通的 \n 换行格式)
 const detailParagraphs = computed(() => {
   const text = detail.value?.detail
   if (!text) return []
   try {
     if (typeof text === 'string') {
       const parsed = JSON.parse(text)
-      return Array.isArray(parsed) ? parsed : [text]
+      if (Array.isArray(parsed)) return parsed
     }
   } catch (e) {
-    return [text]
+    // 解析 JSON 失败说明是普通字符串，按回车符 \n 切割成多段
+    return text.split('\n').filter((p: string) => p.trim() !== '')
   }
   return Array.isArray(text) ? text : [text]
 })
 
-const loadDetail = async () => {
-  // ======== 用于单独查看和调试样式的假数据 ========
-  detail.value = {
-    title: '孙中山',
-    tags: '民主革命先行者',
-    brief: '孙中山（1866年—1925年），名文，字载之，号日新，又号逸仙。他是中国近代民族民主主义革命的开拓者，中国民主革命伟大先行者。',
-    image: homeBgImage,
-    birth: '1866年11月12日',
-    achievements: '1. 领导辛亥革命，推翻封建帝制\n2. 提出“三民主义”\n3. 创立中华民国',
-    portrait: 'https://p1.ssl.qhimg.com/t013cdd5510e2f19b29.jpg',
-    detail: JSON.stringify([
-      "孙中山先生高扬反对封建专制统治的斗争旗帜，提出民族、民权、民生的三民主义政治纲领。",
-      "他率先发出“振兴中华”的呐喊，希望将中国建设成为独立、民主、富强的现代化国家。",
-      "在他的领导下，1911年爆发的辛亥革命，结束了在中国延续几千年的君主专制制度，为中国的进步打开了闸门。"
-    ])
+// 读取数据库人物详情
+const loadDetail = () => {
+  const id = route.params.id;
+  if (!id) {
+    loading.value = false;
+    return;
   }
+
+  // 获取所有人列表，然后本地筛选出这一个 (因为数据量小，这样最方便)
+  listApi({}).then((res: any) => {
+    if (res.code === 200) {
+      const dbData = res.data || [];
+      // 匹配当前路由传递的 ID
+      const currentPerson = dbData.find((item: any) => String(item.id) === String(id));
+
+      if (currentPerson) {
+        // 处理头像图片路径
+        if (currentPerson.image && !currentPerson.image.startsWith('http')) {
+          currentPerson.portrait = BASE_URL + '/api/staticfiles/image/' + currentPerson.image;
+        } else {
+          currentPerson.portrait = currentPerson.image;
+        }
+
+        // 统一设置背景图
+        currentPerson.heroBg = homeBgImage;
+
+        // 赋值给页面变量
+        detail.value = currentPerson;
+      }
+    }
+  }).catch(err => {
+    console.error("获取名人故事数据失败：", err);
+  }).finally(() => {
+    loading.value = false;
+  });
 }
 
 onMounted(() => {
@@ -100,6 +125,7 @@ onMounted(() => {
 </script>
 
 <style scoped lang="less">
+/* === 样式部分保持你原来的完全不变 === */
 .celebrity-detail-page {
   background: #f3f4f6;
   min-height: 100vh;
@@ -124,7 +150,6 @@ onMounted(() => {
     background: linear-gradient(0deg, rgba(0, 0, 0, .8), rgba(0, 0, 0, .2));
   }
 
-  /* ======== 核心修改：左右 Flex 布局 ======== */
   .hero-content {
     position: absolute;
     left: 45%;
@@ -137,7 +162,9 @@ onMounted(() => {
 
     .hero-portrait {
       width: 220px;
-      flex-shrink: 0; //防止图片被压缩 
+      height: 300px;
+      /* 👇 新增：给头像一个固定的高度，约等于 3:4 的标准肖像比例 */
+      flex-shrink: 0;
       border-radius: 8px;
       overflow: hidden;
       border: 2px solid rgba(255, 255, 255, 0.2);
@@ -145,7 +172,12 @@ onMounted(() => {
 
       .portrait-img {
         width: 100%;
-        height: auto;
+        height: 100%;
+        /* 👇 修改：让图片高度完全填满上面的 300px 父容器 */
+        object-fit: cover;
+        /* 👇 核心魔法：保证图片绝对不会被拉伸变形，多出的部分会自动隐藏！ */
+        object-position: top;
+        /* 👇 新增：裁剪时尽量保留人物头部（靠上对齐） */
         display: block;
       }
     }
@@ -200,8 +232,8 @@ onMounted(() => {
       flex: 1;
 
       .info-block {
-        margin-bottom: 40px;
-        padding-bottom: 30px;
+        margin-bottom: 5px;
+        padding-bottom: 20px;
         border-bottom: 1px dashed #e5e7eb;
 
         &:last-child {

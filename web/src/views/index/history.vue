@@ -170,7 +170,7 @@ export default {
 .page-banner {
   position: relative;
   padding: 140px 20px 80px;
-  background-image: url(/@/assets/images/bg.jpg);
+  background-image: url(/@/assets/images/bg3.jpg);
   background-size: cover;
   background-position: center;
   text-align: center;
