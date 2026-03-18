@@ -2,15 +2,14 @@
   <div class="explore-page">
     <Header />
 
-    <section class="explore-hero">
-      <div class="hero-content">
-        <h1 class="page-title">景点探索</h1>
-        <p class="page-subtitle">Discover Xiangshan</p>
-        <p class="header-desc">
-          从历史古迹到自然风光，漫步中山的大街小巷，感受这座城市的独特脉动与人文气息。
-        </p>
+    <div class="page-banner">
+      <div class="banner-overlay"></div>
+      <div class="banner-content">
+        <h1>景点探索</h1>
+        <p class="banner-title">Discover Xiangshan</p>
+        <p>从历史古迹到自然风光，漫步中山的大街小巷，感受这座城市的独特脉动与人文气息。</p>
       </div>
-    </section>
+    </div>
 
     <section class="category-section">
       <div class="category-tabs">
@@ -70,8 +69,10 @@ import { useRouter } from 'vue-router'
 import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
 
-// 测试封面图
-import defaultCover from '/@/assets/images/tourism.jpg'
+// 👇 重点1：解封真实接口的引入
+import { listApi as getClassificationList } from '/@/api/classification'
+import { listApi as getThingList } from '/@/api/thing'
+import { BASE_URL } from "/@/store/constants"
 
 const router = useRouter()
 
@@ -79,41 +80,52 @@ const classList = ref<any[]>([])
 const thingList = ref<any[]>([])
 const activeClassId = ref<string>('')
 
-// 静态测试数据 (Mock Data)
-const mockClassList = [
-  { id: '1', title: '科考探险' },
-  { id: '2', title: '文学艺术' },
-  { id: '3', title: '民俗风情' },
-  { id: '4', title: '历史古迹' },
-  { id: '5', title: '观光游览' }
-]
-
-const mockThingList = [
-  { id: '101', title: '孙中山故居纪念馆', classId: '4', address: '中山市南朗镇翠亨村', description: '全国重点文物保护单位，展示孙中山先生的生平事迹。', imageUrl: defaultCover, level: '5A', price: 0 },
-  { id: '102', title: '中山影视城', classId: '2', address: '中山市南朗镇', description: '集旅游观光、爱国主义教育和影视拍摄等于一体的大型综合性旅游景区。', imageUrl: defaultCover, level: '4A', price: 65 },
-  { id: '103', title: '詹园', classId: '3', address: '中山市南区北台村', description: '目前岭南地区最大的私家古典园林，建筑以苏杭园林为基调。', imageUrl: defaultCover, level: '4A', price: 60 },
-  { id: '104', title: '紫马岭公园', classId: '5', address: '中山市东区', description: '天工与人力交融，游憩共生态并重的大型郊野公园。', imageUrl: defaultCover, level: '', price: 0 },
-  { id: '105', title: '五桂山自然风景区', classId: '1', address: '中山市五桂山镇', description: '主峰海拔531米，为中山市最高峰。适合徒步探险。', imageUrl: defaultCover, level: '自然保护区', price: 0 },
-  { id: '106', title: '崖口村', classId: '3', address: '中山市南朗镇', description: '体验地道岭南水乡民俗和品尝海鲜的好去处。', imageUrl: defaultCover, level: '美丽乡村', price: 0 },
-  { id: '107', title: '岐江夜游', classId: '5', address: '中山市石岐区', description: '乘船游览岐江河，欣赏两岸璀璨的城市夜景与历史遗迹。', imageUrl: defaultCover, level: '', price: 50 },
-  { id: '108', title: '郑观应故居', classId: '4', address: '中山市三乡镇雍陌村', description: '中国近代早期维新思想家郑观应的出生地。', imageUrl: defaultCover, level: '文物保护', price: 0 }
-]
-
-const loadClassifications = () => { classList.value = mockClassList; }
-
-const loadThings = () => {
-  if (activeClassId.value === '') {
-    thingList.value = mockThingList;
-  } else {
-    thingList.value = mockThingList.filter(item => item.classId === activeClassId.value);
-  }
+// 1. 从数据库加载真实的分类数据
+const loadClassifications = () => {
+  getClassificationList({}).then((res: any) => {
+    if (res.code === 200) {
+      classList.value = res.data || []
+    }
+  })
 }
 
+// 2. 从数据库加载真实的景区数据
+const loadThings = () => {
+  const params: any = {}
+  // 如果选中了某个分类，就把分类ID传给后端过滤
+  if (activeClassId.value !== '') {
+    params.c = activeClassId.value
+  }
+
+  getThingList(params).then((res: any) => {
+    if (res.code === 200) {
+      let data = res.data || [];
+      // 处理图片路径，将数据库字段映射为前端展示需要的格式
+      data.forEach((item: any) => {
+        // 图片路径处理
+        if (item.cover && !item.cover.startsWith('http')) {
+          item.imageUrl = BASE_URL + '/api/staticfiles/image/' + item.cover;
+        } else {
+          item.imageUrl = item.cover || '';
+        }
+
+        // 数据库叫 location，模板里原本写的是 address，这里做个桥接
+        item.address = item.location;
+      });
+      thingList.value = data;
+    }
+  }).catch((err) => {
+    console.error("获取景点失败", err);
+  })
+}
+
+// 3. 点击切换分类时，重新请求后端
 const switchCategory = (id: string) => {
   activeClassId.value = id
   loadThings()
 }
 
+// 4. 跳转详情页
 const goToDetail = (id: string) => {
   router.push({ name: 'detail', query: { id: id } })
 }
@@ -137,36 +149,47 @@ onMounted(() => {
   min-height: 100vh;
 }
 
-.explore-hero {
-  background: linear-gradient(rgba(11, 106, 101, 0.85), rgba(11, 106, 101, 0.95)), url('/@/assets/images/tourism.jpg') center/cover;
-  padding: 100px 20px 80px;
-  color: #fff;
+.page-banner {
+  position: relative;
+  padding: 140px 20px 80px;
+  background-image: url(/@/assets/images/bg2.jpg);
+  background-size: cover;
+  background-position: center;
   text-align: center;
+  color: #fff;
 
-  .hero-content {
-    max-width: 800px;
-    margin: 0 auto;
+  .banner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.50);
   }
 
-  .page-title {
-    font-size: 46px;
-    margin-bottom: 12px;
-    font-family: 'Noto Serif SC', serif;
-    letter-spacing: 4px;
-  }
+  .banner-content {
+    position: relative;
+    z-index: 2;
 
-  .page-subtitle {
-    font-size: 18px;
-    color: @accent-color;
-    margin-bottom: 24px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
+    .banner-title {
+      font-size: 13px;
+      margin: -20px 0 30px;
+    }
 
-  .header-desc {
-    font-size: 16px;
-    line-height: 1.8;
-    opacity: 0.9;
+    h1 {
+      font-size: 42px;
+      font-weight: bold;
+      color: @accent-color;
+      letter-spacing: 4px;
+      font-family: 'Noto Serif SC', serif;
+      margin-bottom: 12px;
+    }
+
+    p {
+      font-size: 16px;
+      color: #e5e7eb;
+      letter-spacing: 2px;
+    }
   }
 }
 

@@ -42,6 +42,11 @@ const constantRouterMap = [
         component: () => import('/@/views/index/celebrity-detail.vue')
       },
       {
+        path: 'scenic',
+        name: 'scenic',
+        component: () => import('/@/views/index/scenic.vue')
+      },
+      {
         path: 'detail',
         name: 'detail',
         component: () => import('/@/views/index/detail.vue')
@@ -111,11 +116,6 @@ const constantRouterMap = [
             path: 'scoreView',
             name: 'scoreView',
             component: () => import('/@/views/index/user/score-view.vue')
-          },
-          {
-            path: 'scenic',
-            name: 'scenic',
-            component: () => import('/@/views/index/scenic.vue')
           },
           {
             path: 'commentView',

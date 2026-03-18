@@ -6,7 +6,7 @@
       <div class="banner-overlay"></div>
       <div class="banner-content">
         <h1>香山人物</h1>
-        <p>Figures of Xiangshan</p>
+        <p class="banner-title">Figures of Xiangshan</p>
         <p>寻访香山历史，致敬时代先驱——在这片海滨沃土，诞生了无数改变中国历史的杰出人物。</p>
       </div>
     </div>
@@ -116,12 +116,17 @@ onMounted(() => {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.40);
+    background: rgba(0, 0, 0, 0.50);
   }
 
   .banner-content {
     position: relative;
     z-index: 2;
+
+    .banner-title {
+      font-size: 13px;
+      margin: -20px 0 30px;
+    }
 
     h1 {
       font-size: 42px;

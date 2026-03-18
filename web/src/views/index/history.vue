@@ -6,6 +6,7 @@
       <div class="banner-overlay"></div>
       <div class="banner-content">
         <h1>香山纪事 · 完整长卷</h1>
+        <p class="banner-title">Xiangshan Chronicles · Complete Long Scroll</p>
         <p>跨越近千年的时光，探索中山的辉煌历程</p>
       </div>
     </div>
@@ -188,6 +189,11 @@ export default {
   .banner-content {
     position: relative;
     z-index: 2;
+
+    .banner-title {
+      font-size: 13px;
+      margin: -20px 0 30px;
+    }
 
     h1 {
       font-size: 42px;

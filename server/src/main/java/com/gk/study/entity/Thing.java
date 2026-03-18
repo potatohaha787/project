@@ -43,8 +43,13 @@ public class Thing implements Serializable {
     public String wishCount;
     @TableField
     public String collectCount;
-    @TableField
-    public Long classificationId;
+    // 必须要有的分类 ID 映射
+    @TableField("classification_id")
+    private Long classificationId;
+
+    // 前面加过的 location 映射
+    @TableField("location")
+    private String location;
 
     @TableField(exist = false)
     public List<Long> tags; // 标签
