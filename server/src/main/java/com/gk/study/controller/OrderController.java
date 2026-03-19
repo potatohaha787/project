@@ -3,11 +3,9 @@ package com.gk.study.controller;
 import com.gk.study.common.APIResponse;
 import com.gk.study.common.ResponeCode;
 import com.gk.study.entity.Order;
-import com.gk.study.entity.Thing;
 import com.gk.study.permission.Access;
 import com.gk.study.permission.AccessLevel;
 import com.gk.study.service.OrderService;
-import com.gk.study.service.ThingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +26,6 @@ public class OrderController {
     @Autowired
     OrderService service;
 
-    @Autowired
-    ThingService thingService;
-
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public APIResponse list(){
         List<Order> list =  service.getOrderList();
@@ -48,14 +43,7 @@ public class OrderController {
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     @Transactional
     public APIResponse create(Order order) throws IOException {
-        Thing thing = thingService.getThingById(order.getThingId());
-        if(Integer.parseInt(thing.getRepertory()) < Integer.parseInt(order.getCount())){
-            return new APIResponse(ResponeCode.FAIL, "余票不足");
-        }
-        // 更新库存
-        thing.setRepertory(String.valueOf(Integer.parseInt(thing.getRepertory()) - Integer.parseInt(order.getCount())));
-        thingService.updateThing(thing);
-
+        // 移除了与 Thing 相关的 repertory (余票) 判断及扣减库存逻辑
         service.createOrder(order);
         return new APIResponse(ResponeCode.SUCCESS, "创建成功");
     }

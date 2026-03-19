@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!--页面区域-->
     <div class="page-view">
       <div class="table-operations">
         <a-space>
@@ -32,7 +31,6 @@
       </a-table>
     </div>
 
-    <!--弹窗区域-->
     <div>
       <a-modal :visible="modal.visile" :forceRender="true" :title="modal.title" width="880px" ok-text="确认"
         cancel-text="取消" @cancel="handleCancel" @ok="handleOk">
@@ -50,15 +48,7 @@
                     :field-names="{ label: 'title', value: 'id' }" v-model:value="modal.form.classificationId" />
                 </a-form-item>
               </a-col>
-              <a-col span="12">
-                <a-form-item label="地区">
-                  <a-select mode="multiple" placeholder="请选择" allowClear v-model:value="modal.form.tags">
-                    <template v-for="item in modal.tagData">
-                      <a-select-option :value="item.id">{{ item.title }}</a-select-option>
-                    </template>
-                  </a-select>
-                </a-form-item>
-              </a-col>
+
               <a-col span="24">
                 <a-form-item label="封面">
                   <a-upload-dragger name="file" accept="image/*" :multiple="false" :before-upload="beforeUpload"
@@ -86,11 +76,7 @@
                   <a-input-number placeholder="请输入" :min="0" v-model:value="modal.form.price" style="width: 100%" />
                 </a-form-item>
               </a-col>
-              <a-col span="12">
-                <a-form-item label="余票" name="repertory">
-                  <a-input-number placeholder="请输入" :min="0" v-model:value="modal.form.repertory" style="width: 100%" />
-                </a-form-item>
-              </a-col>
+
               <a-col span="12">
                 <a-form-item label="地址">
                   <a-input placeholder="请输入" v-model:value="modal.form.address" style="width: 100%" />
@@ -126,7 +112,6 @@
 import { FormInstance, message, SelectProps } from 'ant-design-vue';
 import { createApi, listApi, updateApi, deleteApi } from '/@/api/thing';
 import { listApi as listClassificationApi } from '/@/api/classification';
-import { listApi as listTagApi } from '/@/api/tag';
 import { BASE_URL } from '/@/store/constants';
 import { FileImageOutlined } from '@ant-design/icons-vue';
 
@@ -146,11 +131,6 @@ const columns = reactive<TableColumnsType>([
     title: '价格',
     dataIndex: 'price',
     key: 'price',
-  },
-  {
-    title: '余票',
-    dataIndex: 'repertory',
-    key: 'repertory',
   },
   {
     title: '状态',
@@ -212,15 +192,11 @@ const modal = reactive({
   editFlag: false,
   title: '',
   cData: [],
-  tagData: [{}],
   form: {
     id: undefined,
     title: undefined,
     classificationId: undefined,
-    tags: [],
-    repertory: undefined,
     price: undefined,
-    repertory: undefined,
     address: undefined,
     level: undefined,
     status: undefined,
@@ -231,7 +207,6 @@ const modal = reactive({
   rules: {
     title: [{ required: true, message: '请输入名称', trigger: 'change' }],
     classificationId: [{ required: true, message: '请选择分类', trigger: 'change' }],
-    repertory: [{ required: true, message: '请输入库存', trigger: 'change' }],
     price: [{ required: true, message: '请输入定价', trigger: 'change' }],
     status: [{ required: true, message: '请选择状态', trigger: 'change' }],
   },
@@ -242,7 +217,6 @@ const myform = ref<FormInstance>();
 onMounted(() => {
   getDataList();
   getCDataList();
-  getTagDataList();
 });
 
 const getDataList = () => {
@@ -267,14 +241,6 @@ const getDataList = () => {
 const getCDataList = () => {
   listClassificationApi({}).then((res) => {
     modal.cData = res.data;
-  });
-};
-const getTagDataList = () => {
-  listTagApi({}).then((res) => {
-    res.data.forEach((item, index) => {
-      item.index = index + 1;
-    });
-    modal.tagData = res.data;
   });
 };
 
@@ -366,19 +332,12 @@ const handleOk = () => {
       if (modal.form.classificationId) {
         formData.append('classificationId', modal.form.classificationId);
       }
-      if (modal.form.tags) {
-        modal.form.tags.forEach(function (value) {
-          if (value) {
-            formData.append('tags[]', value);
-          }
-        });
-      }
+
       if (modal.form.imageFile) {
         formData.append('imageFile', modal.form.imageFile);
       }
       formData.append('description', modal.form.description || '');
       formData.append('price', modal.form.price || '');
-      formData.append('repertory', modal.form.repertory || '0');
       formData.append('address', modal.form.address || '');
       formData.append('level', modal.form.level || '');
       if (modal.form.status) {

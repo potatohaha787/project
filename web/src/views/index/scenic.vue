@@ -26,7 +26,7 @@
         <div class="thing-card" v-for="item in thingList" :key="item.id" @click="goToDetail(item.id)">
           <div class="card-cover">
             <img :src="item.imageUrl" :alt="item.title" class="cover-img" />
-            <div class="level-badge" v-if="item.level">{{ item.level }}景区</div>
+            <div class="level-badge" v-if="item.level">{{ item.level }}</div>
           </div>
 
           <div class="card-info">
