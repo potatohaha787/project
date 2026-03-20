@@ -4,180 +4,146 @@
 
     <div class="detail-content">
       <div class="detail-content-top">
-        <div style="position: relative;">
-          <div class="thing-infos-view">
-            <div class="thing-infos">
-              <div class="thing-img-box">
-                <img :src="detailData.cover" />
+        <div class="thing-infos-view">
+          <div class="thing-img-box">
+            <img :src="detailData.cover" alt="景区封面" />
+          </div>
+
+          <div class="thing-info-box">
+            <div class="thing-state">
+              <span class="state-badge">开放中</span>
+              <span class="state-text">景区当前状态正常</span>
+            </div>
+
+            <h1 class="thing-name">{{ detailData.title }}</h1>
+
+            <div class="price-box">
+              <span class="a-price-symbol">¥</span>
+              <span class="a-price">{{ detailData.price }}</span>
+              <span class="price-unit">/ 人起</span>
+            </div>
+
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">分类</span>
+                <span class="value">{{ detailData.classification_title }}</span>
               </div>
-              <div class="thing-info-box">
-                <div class="thing-state">
-                  <span class="state hidden-sm">景区状态</span>
-                  <span>开放中</span>
-                </div>
-                <h1 class="thing-name">{{ detailData.title }}</h1>
-                <span>
-                  <span class="a-price-symbol">¥</span>
-                  <span class="a-price">{{ detailData.price }}</span>
-                </span>
-                <div class="translators flex-view" style="">
-                  <span>分类：</span>
-                  <span class="name">{{ detailData.classification_title }}</span>
-                </div>
-                <div class="translators flex-view" style="">
-                  <span>地址：</span>
-                  <span class="name">{{ detailData.address }}</span>
-                </div>
-                <div class="translators flex-view" style="">
-                  <span>级别：</span>
-                  <span class="name">{{ detailData.level }}级</span>
-                </div>
-                <div class="translators flex-view" style="">
-                  <span>余票：</span>
-                  <span class="name">{{ detailData.repertory }}张</span>
-                </div>
-                <button class="buy-btn" @click="handleOrder(detailData)">
-                  <img :src="AddIcon" />
-                  <span>购买门票</span>
-                </button>
+              <div class="info-item">
+                <span class="label">级别</span>
+                <span class="value">{{ detailData.level }}级景区</span>
+              </div>
+              <div class="info-item full-width">
+                <span class="label">地址</span>
+                <span class="value">{{ detailData.address }}</span>
               </div>
             </div>
-            <div class="thing-counts hidden-sm">
-              <div class="count-item flex-view pointer" @click="addToWish()">
-                <div class="count-img">
-                  <img :src="WantIcon">
-                </div>
-                <div class="count-box flex-view">
-                  <div class="count-text-box">
-                    <span class="count-title">加入心愿单</span>
-                  </div>
-                  <div class="count-num-box">
-                    <span class="num-text">{{ detailData.wishCount }}</span>
-                  </div>
-                </div>
+
+            <div class="action-row">
+              <div class="action-btn" @click="addToWish()">
+                <img :src="WantIcon" class="icon" />
+                <span class="text">加入心愿单 ({{ detailData.wishCount }})</span>
               </div>
-              <div class="count-item flex-view pointer" @click="collect()">
-                <div class="count-img">
-                  <img :src="RecommendIcon">
-                </div>
-                <div class="count-box flex-view">
-                  <div class="count-text-box">
-                    <span class="count-title">收藏</span>
-                  </div>
-                  <div class="count-num-box">
-                    <span class="num-text">{{ detailData.collectCount }}</span>
-                  </div>
-                </div>
+              <div class="action-btn" @click="collect()">
+                <img :src="RecommendIcon" class="icon" />
+                <span class="text">收藏 ({{ detailData.collectCount }})</span>
               </div>
-              <div class="count-item flex-view" @click="share()">
-                <div class="count-img">
-                  <img :src="ShareIcon">
-                </div>
-                <div class="count-box flex-view">
-                  <div class="count-text-box">
-                    <span class="count-title">分享</span>
-                  </div>
-                  <div class="count-num-box">
-                    <span class="num-text"></span>
-                    <img :src="WeiboShareIcon" class="mg-l">
-                  </div>
-                </div>
+              <div class="action-btn" @click="share()">
+                <img :src="ShareIcon" class="icon" />
+                <span class="text">分享</span>
               </div>
             </div>
           </div>
         </div>
       </div>
+
       <div class="detail-content-bottom">
-        <div class="thing-content-view flex-view">
-          <div class="main-content">
-            <div class="order-view main-tab">
+
+        <div class="main-content">
+          <div class="order-view main-tab">
+            <div class="tab-list">
               <span class="tab" :class="selectTabIndex === index ? 'tab-select' : ''" v-for="(item, index) in tabData"
                 :key="index" @click="selectTab(index)">
                 {{ item }}
               </span>
               <span :style="{ left: tabUnderLeft + 'px' }" class="tab-underline"></span>
             </div>
-
-            <!--简介-->
-            <div class="thing-intro" :class="selectTabIndex <= 0 ? '' : 'hide'">
-              <p class="text" style="">{{ detailData.description }}</p>
-            </div>
-
-            <!--评论-->
-            <div class="thing-comment" :class="selectTabIndex > 0 ? '' : 'hide'">
-              <div class="title">发表新的评论</div>
-              <div class="publish flex-view">
-                <img :src="AvatarIcon" class="mine-img">
-                <input placeholder="说点什么..." class="content-input" ref="commentRef">
-                <button class="send-btn" @click="sendComment()">发送</button>
-              </div>
-              <div class="tab-view flex-view">
-                <div class="count-text">共有{{ commentData.length }}条评论</div>
-                <div class="tab-box flex-view" v-if="commentData.length > 0">
-                  <span :class="sortIndex === 0 ? 'tab-select' : ''" @click="sortCommentList('recent')">最新</span>
-                  <div class="line"></div>
-                  <span :class="sortIndex === 1 ? 'tab-select' : ''" @click="sortCommentList('hot')">热门</span>
-                </div>
-              </div>
-              <div class="comments-list">
-                <div class="comment-item" v-for="item in commentData">
-                  <div class="flex-item flex-view">
-                    <img :src="AvatarIcon" class="avator">
-                    <div class="person">
-                      <div class="name">{{ item.username }}</div>
-                      <div class="time">{{ item.commentTime }}</div>
-                    </div>
-                    <div class="float-right">
-                      <span @click="like(item.id)">推荐</span>
-                      <span class="num">{{ item.likeCount }}</span>
-                    </div>
-                  </div>
-                  <p class="comment-content">{{ item.content }}</p>
-                </div>
-                <div class="infinite-loading-container">
-                  <div class="infinite-status-prompt" style="">
-                    <div slot="no-results" class="no-results">
-                      <div></div>
-                      <p>没有更多了</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
           </div>
-          <div class="recommend" style="">
-            <div class="title">热门推荐</div>
-            <div class="things">
-              <div class="thing-item thing-item" v-for="item in recommendData" @click="handleDetail(item)">
-                <div class="img-view">
-                  <img :src="item.cover">
+
+          <div class="thing-intro" :class="selectTabIndex <= 0 ? '' : 'hide'">
+            <p class="text">{{ detailData.description }}</p>
+          </div>
+
+          <div class="thing-comment" :class="selectTabIndex > 0 ? '' : 'hide'">
+            <div class="publish flex-view">
+              <img :src="AvatarIcon" class="mine-img">
+              <input placeholder="对这个景区有什么看法？说点什么..." class="content-input" ref="commentRef" @keyup.enter="sendComment">
+              <button class="send-btn" @click="sendComment()">发布</button>
+            </div>
+
+            <div class="tab-view flex-view">
+              <div class="count-text">共 {{ commentData.length }} 条评论</div>
+              <div class="tab-box flex-view" v-if="commentData.length > 0">
+                <span :class="sortIndex === 0 ? 'tab-select' : ''" @click="sortCommentList('recent')">最新</span>
+                <div class="line"></div>
+                <span :class="sortIndex === 1 ? 'tab-select' : ''" @click="sortCommentList('hot')">热门</span>
+              </div>
+            </div>
+
+            <div class="comments-list">
+              <div class="comment-item" v-for="item in commentData" :key="item.id">
+                <div class="flex-item flex-view">
+                  <img :src="AvatarIcon" class="avator">
+                  <div class="person">
+                    <div class="name">{{ item.username }}</div>
+                    <div class="time">{{ item.commentTime }}</div>
+                  </div>
+                  <div class="float-right hover-btn" @click="like(item.id)">
+                    <span>👍 推荐</span>
+                    <span class="num">{{ item.likeCount }}</span>
+                  </div>
                 </div>
-                <div class="info-view">
-                  <h3 class="thing-name">{{ item.title.substring(0, 12) }}</h3>
-                  <span>
-                    <span class="a-price">{{ item.level }}级 - {{ item.price }}元/人</span>
-                  </span>
+                <p class="comment-content">{{ item.content }}</p>
+              </div>
+
+              <div class="infinite-loading-container" v-if="commentData.length === 0">
+                <div class="no-results">
+                  <p>还没有人评论，快来抢沙发吧~</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        <div class="sidebar recommend">
+          <div class="title">热门推荐</div>
+          <div class="things">
+            <div class="thing-item" v-for="item in recommendData" :key="item.id" @click="handleDetail(item)">
+              <div class="img-view">
+                <img :src="item.cover" alt="推荐图片">
+              </div>
+              <div class="info-view">
+                <h3 class="thing-name">{{ item.title.substring(0, 15) }}<span v-if="item.title.length > 15">...</span>
+                </h3>
+                <div class="price-tag">{{ item.level }}级 · ¥{{ item.price }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
     <Footer />
   </div>
 </template>
+
 <script setup>
 import { message } from "ant-design-vue";
 import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
-import AddIcon from '/@/assets/images/add.svg';
 import WantIcon from '/@/assets/images/want-read-hover.svg';
 import RecommendIcon from '/@/assets/images/recommend-hover.svg';
 import ShareIcon from '/@/assets/images/share-icon.svg';
-import WeiboShareIcon from '/@/assets/images/wb-share.svg';
 import AvatarIcon from '/@/assets/images/avatar.jpg';
 import {
   detailApi,
@@ -190,22 +156,22 @@ import { BASE_URL } from "/@/store/constants";
 import { useRoute, useRouter } from "vue-router/dist/vue-router";
 import { useUserStore } from "/@/store";
 import { getFormatTime } from "/@/utils";
+import { ref, onMounted } from 'vue';
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore();
 
-
 let thingId = ref('')
 let detailData = ref({})
-let tabUnderLeft = ref(6)
-let tabData = ref(['简介', '评论'])
+let tabUnderLeft = ref(12)
+let tabData = ref(['详情简介', '游客评论'])
 let selectTabIndex = ref(0)
 
 let commentData = ref([])
 let recommendData = ref([])
 let sortIndex = ref(0)
-let order = ref('recent') // 默认排序最新
+let order = ref('recent')
 
 let commentRef = ref()
 
@@ -218,7 +184,7 @@ onMounted(() => {
 
 const selectTab = (index) => {
   selectTabIndex.value = index
-  tabUnderLeft.value = 6 + 54 * index
+  tabUnderLeft.value = 12 + 104 * index // 调整了指示器滑动的距离，适应更宽的字
 }
 
 const getThingDetail = () => {
@@ -229,6 +195,7 @@ const getThingDetail = () => {
     message.error('获取详情失败')
   })
 }
+
 const addToWish = () => {
   let userId = userStore.user_id
   if (userId) {
@@ -242,6 +209,7 @@ const addToWish = () => {
     message.warn('请先登录')
   }
 }
+
 const collect = () => {
   let userId = userStore.user_id
   if (userId) {
@@ -255,34 +223,13 @@ const collect = () => {
     message.warn('请先登录')
   }
 }
+
 const share = () => {
-  let content = '分享一个非常好玩的网站 ' + window.location.href
-  let shareHref = 'http://service.weibo.com/share/share.php?title=' + content
+  let content = '分享一个非常棒的景区：' + detailData.value.title + ' ' + window.location.href
+  let shareHref = 'http://service.weibo.com/share/share.php?title=' + encodeURIComponent(content)
   window.open(shareHref)
 }
-const handleOrder = (detailData) => {
-  console.log(detailData)
-  if (detailData.repertory === '0') {
-    message.warn('余票不足');
-    return;
-  }
-  const userId = userStore.user_id
-  if (userId) {
-    router.push({
-      name: 'confirm',
-      query:
-      {
-        id: detailData.id,
-        title: detailData.title,
-        cover: detailData.cover,
-        price: detailData.price
-      }
-    })
-  } else {
-    message.warn('请先登录')
-  }
 
-}
 const getRecommendThing = () => {
   listThingList({ sort: 'recommend' }).then(res => {
     res.data.forEach((item, index) => {
@@ -290,28 +237,28 @@ const getRecommendThing = () => {
         item.cover = BASE_URL + '/api/staticfiles/image/' + item.cover
       }
     })
-    console.log(res)
-    recommendData.value = res.data.slice(0, 6)
+    recommendData.value = res.data.slice(0, 5)
   }).catch(err => {
     console.log(err)
   })
 }
+
 const handleDetail = (item) => {
-  // 跳转新页面
   let text = router.resolve({ name: 'detail', query: { id: item.id } })
   window.open(text.href, '_blank')
 }
+
 const sendComment = () => {
-  console.log(commentRef.value)
   let text = commentRef.value.value.trim()
-  console.log(text)
   if (text.length <= 0) {
+    message.warn('评论内容不能为空')
     return
   }
-  commentRef.value.value = ''
   let userId = userStore.user_id
   if (userId) {
     createCommentApi({ content: text, thingId: thingId.value, userId: userId }).then(res => {
+      message.success('评论发布成功')
+      commentRef.value.value = ''
       getCommentList()
     }).catch(err => {
       console.log(err)
@@ -321,6 +268,7 @@ const sendComment = () => {
     router.push({ name: 'login' })
   }
 }
+
 const like = (commentId) => {
   likeApi({ id: commentId }).then(res => {
     getCommentList()
@@ -328,6 +276,7 @@ const like = (commentId) => {
     console.log(err)
   })
 }
+
 const getCommentList = () => {
   listThingCommentsApi({ thingId: thingId.value, order: order.value }).then(res => {
     res.data.forEach(item => {
@@ -338,618 +287,507 @@ const getCommentList = () => {
     console.log(err)
   })
 }
+
 const sortCommentList = (sortType) => {
-  if (sortType === 'recent') {
-    sortIndex.value = 0
-  } else {
-    sortIndex.value = 1
-  }
+  sortIndex.value = sortType === 'recent' ? 0 : 1
   order.value = sortType
   getCommentList()
 }
-
 </script>
+
 <style scoped lang="less">
-.hide {
-  display: none;
+/* 全局基础设置 */
+.detail {
+  background: #f7f9fa;
+  /* 更柔和的高级灰背景 */
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-.detail-content {
-  display: flex;
-  flex-direction: column;
-  width: 1100px;
-  margin: 4px auto;
+.hide {
+  display: none !important;
 }
 
 .flex-view {
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
 }
 
-.hidden-lg {
-  display: none !important;
+.detail-content {
+  width: 1200px;
+  margin: 32px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ===== 顶部卡片 (Hero Section) ===== */
+.detail-content-top {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  padding: 32px;
+  margin-top: 40px;
 }
 
 .thing-infos-view {
   display: flex;
-  margin: 89px 0 40px;
-  overflow: hidden;
+  align-items: stretch;
+  gap: 40px;
 
-  .thing-infos {
-    -webkit-box-flex: 1;
-    -ms-flex: 1;
-    flex: 1;
-    display: flex;
-  }
-
-  .mobile-share-box {
-    height: 38px;
-    background: transparent;
-    padding: 0 16px;
-    margin: 12px 0;
-    font-size: 0;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
-    align-items: center;
-    -webkit-box-pack: justify;
-    -ms-flex-pack: justify;
-    justify-content: space-between;
-
-    .state {
-      width: 64px;
-      height: 24px;
-      line-height: 24px;
-      background: rgba(70, 132, 226, .1);
-      border-radius: 2px;
-      font-weight: 500;
-      font-size: 12px;
-      color: #4684e2;
-      text-align: center;
-    }
-
-    .share-img {
-      background: #fff;
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      text-align: center;
-
-      img {
-        position: relative;
-        top: 4px;
-        width: 24px;
-      }
-    }
-  }
-
+  /* 封面图 */
   .thing-img-box {
-    -webkit-box-flex: 0;
-    -ms-flex: 0 0 235px;
-    flex: 0 0 235px;
-    margin: 0 40px 0 0;
-
-    img {
-      width: 255px;
-      height: 200px;
-      display: block;
-      background-size: cover;
-      object-fit: cover;
-    }
-  }
-
-  .thing-info-box {
-    text-align: left;
-    padding: 0;
-    margin: 0;
-  }
-
-  .thing-state {
-    height: 26px;
-    line-height: 26px;
-
-    .state {
-      font-weight: 500;
-      color: #4684e2;
-      background: rgba(70, 132, 226, .1);
-      border-radius: 2px;
-      padding: 5px 8px;
-      margin-right: 16px;
-    }
-
-    span {
-      font-size: 14px;
-      color: #152844;
-    }
-  }
-
-  .thing-name {
-    line-height: 32px;
-    margin: 16px 0;
-    color: #0F1111 !important;
-    font-size: 15px !important;
-    font-weight: 400 !important;
-    font-style: normal !important;
-    text-transform: none !important;
-    text-decoration: none !important;
-  }
-
-  .translators,
-  .authors {
-    line-height: 18px;
-    font-size: 14px;
-    margin: 8px 0;
-    -webkit-box-align: start;
-    -ms-flex-align: start;
-    align-items: flex-start;
-    -webkit-box-pack: start;
-    -ms-flex-pack: start;
-    justify-content: flex-start;
-
-    .name {
-      color: #315c9e;
-      white-space: normal;
-    }
-  }
-
-  .tags {
-    position: absolute;
-    bottom: 20px;
-    margin-top: 16px;
-
-    .category-box {
-      color: #152844;
-      font-size: 14px;
-
-      .title {
-        color: #787878;
-      }
-    }
-  }
-
-  .thing-counts {
-    -webkit-box-flex: 0;
-    -ms-flex: 0 0 235px;
-    flex: 0 0 235px;
-    margin-left: 20px;
-  }
-
-  .pointer {
-    cursor: pointer;
-  }
-
-  .count-item {
-    height: 64px;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
-    align-items: center;
-    cursor: pointer;
-  }
-
-  .count-img {
-    -webkit-box-flex: 0;
-    -ms-flex: 0 0 32px;
-    flex: 0 0 32px;
-    margin-right: 24px;
-    font-size: 0;
+    flex: 0 0 460px;
+    height: 320px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 
     img {
       width: 100%;
-      display: block;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+
+      &:hover {
+        transform: scale(1.03);
+      }
     }
   }
 
-  .count-box {
-    position: relative;
-    border-bottom: 1px solid #cedce4;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
-    align-items: center;
-    -webkit-box-pack: justify;
-    -ms-flex-pack: justify;
-    justify-content: space-between;
-    -webkit-box-flex: 1;
-    -ms-flex: 1;
+  /* 核心信息区 */
+  .thing-info-box {
     flex: 1;
-    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    .thing-state {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+
+      .state-badge {
+        background: #e8f3ff;
+        color: #1677ff;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .state-text {
+        font-size: 13px;
+        color: #86868b;
+      }
+    }
+
+    .thing-name {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1d1d1f;
+      line-height: 1.3;
+      margin: 0 0 16px 0;
+    }
+
+    .price-box {
+      margin-bottom: 24px;
+      color: #FF5A5F;
+      display: flex;
+      align-items: baseline;
+
+      .a-price-symbol {
+        font-size: 20px;
+        font-weight: 600;
+        margin-right: 2px;
+      }
+
+      .a-price {
+        font-size: 36px;
+        font-weight: 700;
+      }
+
+      .price-unit {
+        font-size: 14px;
+        color: #86868b;
+        margin-left: 8px;
+        font-weight: 400;
+      }
+    }
+
+    /* 网格化信息展示 */
+    .info-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 32px;
+      background: #fbfbfd;
+      padding: 20px;
+      border-radius: 12px;
+
+      .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 120px;
+
+        &.full-width {
+          width: 100%;
+        }
+
+        .label {
+          font-size: 13px;
+          color: #86868b;
+        }
+
+        .value {
+          font-size: 15px;
+          color: #1d1d1f;
+          font-weight: 500;
+        }
+      }
+    }
+
+    /* 操作按钮行 */
+    .action-row {
+      display: flex;
+      gap: 16px;
+      margin-top: auto;
+
+      .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #f2f2f7;
+        padding: 10px 20px;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        .icon {
+          width: 20px;
+          height: 20px;
+        }
+
+        .text {
+          font-size: 14px;
+          font-weight: 600;
+          color: #1d1d1f;
+        }
+
+        &:hover {
+          background: #e5e5ea;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+      }
+    }
   }
+}
 
-  .count-text-box {
-    font-size: 0;
+/* ===== 底部内容区 (Left: Main, Right: Sidebar) ===== */
+.detail-content-bottom {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
 
-    .count-title {
-      color: #152844;
-      font-weight: 600;
-      font-size: 16px;
-      line-height: 18px;
-      display: block;
-      height: 18px;
+/* 左侧主容器 */
+.main-content {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  padding: 32px;
+  min-height: 500px;
+
+  /* 自定义时尚 Tab */
+  .main-tab {
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 32px;
+
+    .tab-list {
+      position: relative;
+      display: flex;
+      gap: 40px;
+    }
+
+    .tab {
+      font-size: 18px;
+      font-weight: 500;
+      color: #86868b;
+      padding-bottom: 16px;
+      cursor: pointer;
+      transition: color 0.3s ease;
+
+      &.tab-select {
+        color: #1d1d1f;
+        font-weight: 600;
+      }
+
+      &:hover {
+        color: #1d1d1f;
+      }
+    }
+
+    .tab-underline {
+      position: absolute;
+      bottom: -1px;
+      width: 48px;
+      height: 4px;
+      background: #1d1d1f;
+      border-radius: 2px;
+      transition: left 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
     }
   }
 
-  .count-num-box {
-    font-weight: 600;
-    font-size: 20px;
-    line-height: 24px;
-    color: #152844;
+  /* 简介排版 */
+  .thing-intro {
+    .text {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #333333;
+      white-space: pre-wrap;
+      text-align: justify;
+    }
   }
 }
 
-.buy-btn {
-  cursor: pointer;
-  display: block;
-  background: #4684e2;
-  border-radius: 4px;
-  text-align: center;
-  color: #fff;
-  font-size: 14px;
-  height: 36px;
-  line-height: 36px;
-  width: 110px;
-  outline: none;
-  border: none;
-  margin-top: 18px;
+/* 评论区重构 */
+.thing-comment {
+  .publish {
+    background: #fbfbfd;
+    padding: 20px;
+    border-radius: 16px;
+    align-items: center;
+    margin-bottom: 32px;
+
+    .mine-img {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .content-input {
+      flex: 1;
+      height: 48px;
+      background: #ffffff;
+      border: 1px solid #e5e5ea;
+      border-radius: 24px;
+      padding: 0 24px;
+      font-size: 15px;
+      color: #1d1d1f;
+      transition: border-color 0.3s;
+
+      &:focus {
+        outline: none;
+        border-color: #1677ff;
+      }
+    }
+
+    .send-btn {
+      margin-left: 16px;
+      background: #1d1d1f;
+      color: #ffffff;
+      height: 48px;
+      border-radius: 24px;
+      padding: 0 32px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s;
+
+      &:hover {
+        background: #333336;
+      }
+    }
+  }
+
+  .tab-view {
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding: 0 8px;
+
+    .count-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1d1d1f;
+    }
+
+    .tab-box {
+      font-size: 14px;
+      color: #86868b;
+
+      span {
+        cursor: pointer;
+        padding: 4px 8px;
+        transition: color 0.2s;
+
+        &.tab-select,
+        &:hover {
+          color: #1d1d1f;
+          font-weight: 600;
+        }
+      }
+
+      .line {
+        width: 1px;
+        height: 12px;
+        background: #e5e5ea;
+        margin: 0 8px;
+      }
+    }
+  }
+
+  .comments-list {
+    .comment-item {
+      padding: 24px 0;
+      border-bottom: 1px solid #f0f0f0;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .flex-item {
+        align-items: center;
+        margin-bottom: 12px;
+
+        .avator {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          margin-right: 12px;
+        }
+
+        .person {
+          flex: 1;
+
+          .name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1d1d1f;
+          }
+
+          .time {
+            font-size: 12px;
+            color: #86868b;
+            margin-top: 2px;
+          }
+        }
+
+        .hover-btn {
+          cursor: pointer;
+          font-size: 13px;
+          color: #86868b;
+          background: #f2f2f7;
+          padding: 6px 12px;
+          border-radius: 16px;
+          transition: all 0.2s;
+
+          .num {
+            margin-left: 4px;
+            font-weight: 600;
+          }
+
+          &:hover {
+            background: #e5e5ea;
+            color: #1d1d1f;
+          }
+        }
+      }
+
+      .comment-content {
+        margin-left: 52px;
+        font-size: 15px;
+        line-height: 1.6;
+        color: #333333;
+      }
+    }
+
+    .no-results {
+      text-align: center;
+      color: #86868b;
+      padding: 60px 0;
+      font-size: 15px;
+    }
+  }
 }
 
-.buy-btn img {
-  width: 12px;
-  margin-right: 2px;
-  vertical-align: middle;
-}
-
-.buy-btn span {
-  vertical-align: middle;
-}
-
-.buy-way {
-  overflow: hidden;
+/* 右侧侧边栏 (热门推荐) */
+.sidebar {
+  width: 320px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  padding: 24px;
+  position: sticky;
+  top: 24px;
+  /* 随页面滚动时保持悬浮 */
 
   .title {
-    font-weight: 600;
     font-size: 18px;
-    height: 26px;
-    line-height: 26px;
-    color: #152844;
-    margin-bottom: 12px;
-  }
-}
-
-.thing-content-view {
-  margin-top: 40px;
-  padding-bottom: 50px;
-}
-
-.main-content {
-  -webkit-box-flex: 1;
-  -ms-flex: 1;
-  flex: 1;
-
-  .text {
-    color: #484848;
-    font-size: 16px;
-    line-height: 26px;
-    padding-left: 12px;
-    margin: 11px 0;
-    white-space: pre-wrap;
-  }
-}
-
-.main-tab {
-  border-bottom: 1px solid #cedce4;
-}
-
-.order-view {
-  position: relative;
-  color: #6c6c6c;
-  font-size: 14px;
-  line-height: 40px;
-
-  .title {
-    margin-right: 8px;
-  }
-
-  .tab {
-    margin-right: 20px;
-    cursor: pointer;
-    color: #5f77a6;
-    font-size: 16px;
-    cursor: pointer;
-  }
-
-  .tab-select {
-    color: #152844;
     font-weight: 600;
-  }
-
-  .tab-underline {
-    position: absolute;
-    bottom: 0;
-    left: 84px;
-    width: 16px;
-    height: 4px;
-    background: #4684e2;
-    -webkit-transition: left .3s;
-    transition: left .3s;
-  }
-}
-
-.recommend {
-  -webkit-box-flex: 0;
-  -ms-flex: 0 0 235px;
-  flex: 0 0 235px;
-  margin-left: 20px;
-
-  .title {
-    font-weight: 600;
-    font-size: 18px;
-    line-height: 26px;
-    color: #152844;
-    margin-bottom: 12px;
+    color: #1d1d1f;
+    margin-bottom: 20px;
   }
 
   .things {
-    border-top: 1px solid #cedce4;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 
     .thing-item {
-      min-width: 255px;
-      max-width: 255px;
-      position: relative;
-      flex: 1;
-      margin-right: 20px;
-      height: fit-content;
-      overflow: hidden;
-      margin-top: 26px;
-      margin-bottom: 36px;
-      padding-bottom: 24px;
-      border-bottom: 1px #e1e1e1 solid;
+      display: flex;
+      gap: 16px;
+      align-items: center;
       cursor: pointer;
+      padding: 10px;
+      margin: -10px;
+      border-radius: 12px;
+      transition: background 0.2s;
+
+      &:hover {
+        background: #fbfbfd;
+      }
 
       .img-view {
-        //background: #f3f3f3;
-        //text-align: center;
-        height: 200px;
-        width: 255px;
-        //border: 1px #f3f3f3 solid;
+        width: 80px;
+        height: 80px;
+        border-radius: 10px;
+        overflow: hidden;
+        flex-shrink: 0;
 
         img {
-          height: 200px;
-          width: 255px;
-          overflow: hidden;
-          margin: 0 auto;
-          background-size: cover;
+          width: 100%;
+          height: 100%;
           object-fit: cover;
         }
       }
 
       .info-view {
-        //background: #f6f9fb;
-        overflow: hidden;
-        padding: 0 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
 
         .thing-name {
-          line-height: 32px;
-          margin-top: 12px;
-          color: #0F1111 !important;
-          font-size: 15px !important;
-          font-weight: 400 !important;
-          font-style: normal !important;
-          text-transform: none !important;
-          text-decoration: none !important;
+          font-size: 15px;
+          font-weight: 600;
+          color: #1d1d1f;
+          line-height: 1.4;
+          margin: 0 0 6px 0;
         }
 
-        .price {
-          color: #ff7b31;
-          font-size: 20px;
-          line-height: 20px;
-          margin-top: 4px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .translators {
-          color: #6f6f6f;
-          font-size: 12px;
-          line-height: 14px;
-          margin-top: 4px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-      }
-    }
-
-  }
-}
-
-.flex-view {
-  display: flex;
-}
-
-.thing-comment {
-  .title {
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 22px;
-    height: 22px;
-    color: #152844;
-    margin: 24px 0 12px;
-  }
-
-  .publish {
-    -webkit-box-align: center;
-    -ms-flex-align: center;
-    align-items: center;
-
-    .mine-img {
-      -webkit-box-flex: 0;
-      -ms-flex: 0 0 40px;
-      flex: 0 0 40px;
-      margin-right: 12px;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-    }
-
-    .content-input {
-      -webkit-box-flex: 1;
-      -ms-flex: 1;
-      flex: 1;
-      background: #f6f9fb;
-      border-radius: 4px;
-      height: 32px;
-      line-height: 32px;
-      color: #484848;
-      padding: 5px 12px;
-      white-space: nowrap;
-      outline: none;
-      border: 0px;
-    }
-
-    .send-btn {
-      margin-left: 10px;
-      background: #4684e2;
-      border-radius: 4px;
-      -webkit-box-flex: 0;
-      -ms-flex: 0 0 80px;
-      flex: 0 0 80px;
-      color: #fff;
-      font-size: 14px;
-      text-align: center;
-      height: 32px;
-      line-height: 32px;
-      outline: none;
-      border: 0px;
-      cursor: pointer;
-    }
-  }
-
-  .tab-view {
-    -webkit-box-pack: justify;
-    -ms-flex-pack: justify;
-    justify-content: space-between;
-    font-size: 14px;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
-    align-items: center;
-    margin: 24px 0;
-
-    .count-text {
-      color: #484848;
-      float: left;
-    }
-
-    .tab-box {
-      color: #5f77a6;
-      -webkit-box-align: center;
-      -ms-flex-align: center;
-      align-items: center;
-
-      .tab-select {
-        color: #152844;
-      }
-
-      span {
-        cursor: pointer;
-      }
-    }
-
-    .line {
-      width: 1px;
-      height: 12px;
-      margin: 0 12px;
-      background: #cedce4;
-    }
-  }
-}
-
-
-.comments-list {
-  .comment-item {
-    .flex-item {
-      -webkit-box-align: center;
-      -ms-flex-align: center;
-      align-items: center;
-      padding-top: 16px;
-
-      .avator {
-        -webkit-box-flex: 0;
-        -ms-flex: 0 0 40px;
-        flex: 0 0 40px;
-        width: 40px;
-        height: 40px;
-        margin-right: 12px;
-        border-radius: 50%;
-        cursor: pointer;
-      }
-
-      .person {
-        -webkit-box-flex: 1;
-        -ms-flex: 1;
-        flex: 1;
-      }
-
-      .name {
-        color: #152844;
-        font-weight: 600;
-        font-size: 14px;
-        line-height: 22px;
-        height: 22px;
-        cursor: pointer;
-      }
-
-      .time {
-        color: #5f77a6;
-        font-size: 12px;
-        line-height: 16px;
-        height: 16px;
-        margin-top: 2px;
-      }
-
-      .float-right {
-        color: #4684e2;
-        font-size: 14px;
-        float: right;
-
-        span {
-          margin-left: 19px;
-          cursor: pointer;
-        }
-
-        .num {
-          color: #152844;
-          margin-left: 6px;
-          cursor: auto;
+        .price-tag {
+          font-size: 13px;
+          color: #FF5A5F;
+          font-weight: 500;
         }
       }
     }
   }
-}
-
-.comment-content {
-  margin-top: 8px;
-  color: #484848;
-  font-size: 14px;
-  line-height: 22px;
-  padding-bottom: 16px;
-  border-bottom: 1px dashed #cedce4;
-  margin-left: 52px;
-  overflow: hidden;
-  word-break: break-word;
-}
-
-.infinite-loading-container {
-  clear: both;
-  text-align: center;
-}
-
-.a-price-symbol {
-  top: -0.5em;
-  font-size: 12px;
-}
-
-.a-price {
-  color: #0F1111;
-  font-size: 14px;
 }
 </style>

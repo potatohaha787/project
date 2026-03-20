@@ -202,7 +202,8 @@ const modal = reactive({
     status: undefined,
     cover: undefined,
     coverUrl: undefined,
-    imageFile: undefined,
+    imageFile: undefined as any,
+    description: undefined,
   },
   rules: {
     title: [{ required: true, message: '请输入名称', trigger: 'change' }],
@@ -244,7 +245,7 @@ const getCDataList = () => {
   });
 };
 
-const onSearchChange = (e: Event) => {
+const onSearchChange = (e: any) => {
   data.keyword = e?.target?.value;
   console.log(data.keyword);
 };
@@ -254,7 +255,7 @@ const onSearch = () => {
 };
 
 const rowSelection = ref({
-  onChange: (selectedRowKeys: (string | number)[], selectedRows: DataItem[]) => {
+  onChange: (selectedRowKeys: (string | number)[], selectedRows: any[]) => {
     console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
     data.selectedRowKeys = selectedRowKeys;
   },
@@ -267,10 +268,11 @@ const handleAdd = () => {
   modal.title = '新增';
   // 重置
   for (const key in modal.form) {
-    modal.form[key] = undefined;
+    (modal.form as any)[key] = undefined;
   }
-  modal.form.cover = undefined;
+  (modal.form as any).cover = undefined;
 };
+
 const handleEdit = (record: any) => {
   resetModal();
   modal.visile = true;
@@ -278,16 +280,19 @@ const handleEdit = (record: any) => {
   modal.title = '编辑';
   // 重置
   for (const key in modal.form) {
-    modal.form[key] = undefined;
+    (modal.form as any)[key] = undefined;
   }
   for (const key in record) {
     if (record[key]) {
-      modal.form[key] = record[key];
+      // 加上 (modal.form as any) 绕过类型检查
+      (modal.form as any)[key] = record[key];
     }
   }
+
   if (modal.form.cover) {
-    modal.form.coverUrl = BASE_URL + '/api/staticfiles/image/' + modal.form.cover;
-    modal.form.cover = undefined;
+    // 同样使用 as any 绕过字符串赋值的类型检查
+    (modal.form as any).coverUrl = BASE_URL + '/api/staticfiles/image/' + modal.form.cover;
+    (modal.form as any).cover = undefined;
   }
 };
 
@@ -325,24 +330,30 @@ const handleOk = () => {
     ?.validate()
     .then(() => {
       const formData = new FormData();
+
+      // 使用 as any 或 || '' 绕过 TypeScript 的严格类型检查
       if (modal.editFlag) {
-        formData.append('id', modal.form.id);
+        formData.append('id', modal.form.id as any);
       }
-      formData.append('title', modal.form.title);
+      formData.append('title', modal.form.title || '');
+
       if (modal.form.classificationId) {
-        formData.append('classificationId', modal.form.classificationId);
+        formData.append('classificationId', modal.form.classificationId as any);
       }
 
       if (modal.form.imageFile) {
-        formData.append('imageFile', modal.form.imageFile);
+        formData.append('imageFile', modal.form.imageFile as any);
       }
+
       formData.append('description', modal.form.description || '');
-      formData.append('price', modal.form.price || '');
+      formData.append('price', modal.form.price as any || '');
       formData.append('address', modal.form.address || '');
       formData.append('level', modal.form.level || '');
+
       if (modal.form.status) {
-        formData.append('status', modal.form.status);
+        formData.append('status', modal.form.status as any);
       }
+
       if (modal.editFlag) {
         updateApi(formData)
           .then((res) => {
