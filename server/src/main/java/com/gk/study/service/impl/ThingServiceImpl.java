@@ -3,8 +3,10 @@ package com.gk.study.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.gk.study.entity.Classification;
 import com.gk.study.entity.Thing;
 import com.gk.study.entity.ThingTag;
+import com.gk.study.mapper.ClassificationMapper;
 import com.gk.study.mapper.ThingMapper;
 import com.gk.study.mapper.ThingTagMapper;
 import com.gk.study.service.ThingService;
@@ -19,11 +21,16 @@ import java.util.stream.Collectors;
 
 @Service
 public class ThingServiceImpl extends ServiceImpl<ThingMapper, Thing> implements ThingService {
+
     @Autowired
     ThingMapper mapper;
 
     @Autowired
     ThingTagMapper thingTagMapper;
+
+    // 注入分类Mapper，用于查询分类名称
+    @Autowired
+    ClassificationMapper classificationMapper;
 
     @Override
     public List<Thing> getThingList(String keyword, String sort, String c, String tag) {
@@ -113,7 +120,19 @@ public class ThingServiceImpl extends ServiceImpl<ThingMapper, Thing> implements
 
     @Override
     public Thing getThingById(String id) {
-        return mapper.selectById(id);
+        // 1. 先查出景区本身的信息
+        Thing thing = mapper.selectById(id);
+
+        // 2. 如果景区存在，且绑定了分类ID
+        if (thing != null && thing.getClassificationId() != null) {
+            // 3. 根据分类ID去 classification 表里查出对应的分类对象
+            Classification classification = classificationMapper.selectById(thing.getClassificationId());
+            if (classification != null) {
+                // 4. 将查到的分类名称赋值给刚才新建的 classification_title 字段
+                thing.classification_title = classification.getTitle();
+            }
+        }
+        return thing;
     }
 
     // 心愿数加1

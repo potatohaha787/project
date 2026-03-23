@@ -97,7 +97,7 @@
                     <div class="name">{{ item.username }}</div>
                     <div class="time">{{ item.commentTime }}</div>
                   </div>
-                  <div class="float-right hover-btn" @click="like(item.id)">
+                  <div class="float-right hover-btn" @click="like(item)">
                     <span>👍 推荐</span>
                     <span class="num">{{ item.likeCount }}</span>
                   </div>
@@ -269,12 +269,41 @@ const sendComment = () => {
   }
 }
 
-const like = (commentId) => {
-  likeApi({ id: commentId }).then(res => {
-    getCommentList()
+const like = (item) => {
+  // 1. 获取当前登录用户的 ID
+  let currentUserId = userStore.user_id;
+  if (!currentUserId) {
+    message.warn('请先登录后再点赞！');
+    return;
+  }
+
+  // 2. 限制不能给自己点赞 (判断当前登录用户ID是否等于评论作者的ID)
+  if (item.userId === currentUserId) {
+    message.warn('不能给自己的评论点赞哦！');
+    return;
+  }
+
+  // 3. 从本地缓存获取当前用户已经点赞过的评论ID列表
+  let storageKey = 'likedComments_' + currentUserId;
+  let likedList = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
+  // 4. 判断是否已经点过赞
+  if (likedList.includes(item.id)) {
+    message.warn('您已经推荐过这条评论啦，不能重复点赞！');
+    return;
+  }
+
+  // 5. 发送点赞请求到后端
+  likeApi({ id: item.id }).then(res => {
+    // 点赞成功后，将该评论ID存入当前用户的专属缓存中
+    likedList.push(item.id);
+    localStorage.setItem(storageKey, JSON.stringify(likedList));
+
+    message.success('推荐成功！');
+    getCommentList(); // 刷新评论列表
   }).catch(err => {
-    console.log(err)
-  })
+    console.log(err);
+  });
 }
 
 const getCommentList = () => {

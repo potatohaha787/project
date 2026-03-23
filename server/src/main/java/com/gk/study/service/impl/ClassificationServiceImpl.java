@@ -2,8 +2,8 @@ package com.gk.study.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.gk.study.mapper.ClassificationMapper;
 import com.gk.study.entity.Classification;
+import com.gk.study.mapper.ClassificationMapper;
 import com.gk.study.service.ClassificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,6 @@ public class ClassificationServiceImpl extends ServiceImpl<ClassificationMapper,
 
     @Override
     public void createClassification(Classification classification) {
-        System.out.println(classification);
         classification.setCreateTime(String.valueOf(System.currentTimeMillis()));
         mapper.insert(classification);
     }

@@ -34,6 +34,8 @@ public class Thing implements Serializable {
     @TableField
     public String pv;
     @TableField
+    public String createTime;
+    @TableField
     public String recommendCount;
     @TableField
     public String wishCount;
@@ -48,5 +50,8 @@ public class Thing implements Serializable {
 
     @TableField(exist = false)
     public MultipartFile imageFile;
+
+    @TableField(exist = false)
+    public String classification_title;
 
 }

@@ -37,6 +37,16 @@ const constantRouterMap = [
         component: () => import('/@/views/index/celebrity.vue')
       },
       {
+        path: 'heritage',
+        name: 'heritage',
+        component: () => import('/@/views/index/heritage.vue')
+      },
+      {
+        path: 'heritageDetail',
+        name: 'heritageDetail',
+        component: () => import('/@/views/index/heritageDetail.vue')
+      },
+      {
         path: 'celebrity/:id',
         name: 'celebrityDetail',
         component: () => import('/@/views/index/celebrity-detail.vue')
