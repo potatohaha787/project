@@ -1,21 +1,17 @@
 import { get, post } from '/@/utils/http/axios';
 
-// 规范路径，加上 /api
 enum URL {
-  list = '/api/heritage/list',
-  detail = '/api/heritage/detail',
-  create = '/api/heritage/create',
-  update = '/api/heritage/update',
-  delete = '/api/heritage/delete',
+  list = '/api/food/list',
+  detail = '/api/food/detail',
+  create = '/api/food/create',
+  update = '/api/food/update',
+  delete = '/api/food/delete',
 }
 
 const listApi = async (params?: any) => get<any>({ url: URL.list, params: params, data: {}, headers: {} });
 const detailApi = async (params?: any) => get<any>({ url: URL.detail, params: params, data: {}, headers: {} });
-
-// 【补充增删改 API 函数，其中 create 和 update 需要支持 FormData 传文件】
 const createApi = async (data: any) => post<any>({ url: URL.create, params: {}, data: data, headers: { 'Content-Type': 'multipart/form-data;charset=utf-8' } });
 const updateApi = async (data: any) => post<any>({ url: URL.update, params: {}, data: data, headers: { 'Content-Type': 'multipart/form-data;charset=utf-8' } });
 const deleteApi = async (params: any) => post<any>({ url: URL.delete, params: params, headers: {} });
 
-// 【统一导出】
 export { listApi, detailApi, createApi, updateApi, deleteApi };

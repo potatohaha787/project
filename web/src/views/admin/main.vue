@@ -19,34 +19,42 @@
             <database-outlined />
             <span>香山纪事</span>
           </a-menu-item>
+
           <a-menu-item key="adminCelebrity">
             <user-outlined />
             <span>名人故事</span>
           </a-menu-item>
+
+          <a-menu-item key="adminHeritage">
+            <database-outlined />
+            <span>非遗文化</span>
+          </a-menu-item>
+
+          <a-menu-item key="adminFood">
+            <appstore-outlined />
+            <span>香山美食</span>
+          </a-menu-item>
+
           <a-menu-item key="thing">
             <database-outlined />
             <span>景区管理</span>
           </a-menu-item>
+
           <a-menu-item key="classification">
             <layout-outlined />
             <span>景区类别</span>
           </a-menu-item>
-          <a-menu-item key="tag">
-            <tag-outlined />
-            <span>地区管理</span>
-          </a-menu-item>
-          <a-menu-item key="order">
-            <dollar-outlined />
-            <span>订单管理</span>
-          </a-menu-item>
+
           <a-menu-item key="comment">
             <comment-outlined />
             <span>评论管理</span>
           </a-menu-item>
+
           <a-menu-item key="user">
             <user-outlined />
             <span>用户管理</span>
           </a-menu-item>
+
           <a-sub-menu>
             <template #icon>
               <folder-outlined />
@@ -197,18 +205,4 @@ const handleLogout = () => {
 :deep(.ant-layout-content) {
   overflow-x: hidden;
 }
-
-//:deep(.ant-layout-sider) {
-//  padding: 16px 0;
-//  background-color: #f0f2f5;
-//}
-//
-//:deep(.ant-menu) {
-//  padding-top: 16px;
-//  height: 100%;
-//}
-//
-//:deep(.ant-layout-sider-trigger) {
-//  background-color: #fff;
-//  height: 0px; // 故意设置0 隐藏
-//}</style>
+</style>

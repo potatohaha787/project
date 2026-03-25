@@ -2,10 +2,10 @@ package com.gk.study.controller;
 
 import com.gk.study.common.APIResponse;
 import com.gk.study.common.ResponeCode;
-import com.gk.study.entity.Heritage;
+import com.gk.study.entity.Food;
 import com.gk.study.permission.Access;
 import com.gk.study.permission.AccessLevel;
-import com.gk.study.service.HeritageService;
+import com.gk.study.service.FoodService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -18,50 +18,52 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/heritage")
-public class HeritageController {
+@RequestMapping("/food")
+public class FoodController {
 
     @Autowired
-    HeritageService service;
+    FoodService service;
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public APIResponse list(){
-        List<Heritage> list = service.getHeritageList();
+        List<Food> list = service.getFoodList();
         return new APIResponse(ResponeCode.SUCCESS, "查询成功", list);
     }
 
     @RequestMapping(value = "/detail", method = RequestMethod.GET)
     public APIResponse detail(String id){
-        Heritage heritage = service.getHeritageDetail(id);
-        if(heritage == null){
-            return new APIResponse(ResponeCode.FAIL, "未找到该非遗项目", null);
+        Food food = service.getFoodDetail(id);
+        if(food == null){
+            return new APIResponse(ResponeCode.FAIL, "未找到该美食项目", null);
         }
-        return new APIResponse(ResponeCode.SUCCESS, "查询成功", heritage);
+        return new APIResponse(ResponeCode.SUCCESS, "查询成功", food);
     }
 
-    // 🌟 修改：支持接收图片文件并保存
+    // 🌟 核心修改：支持接收 MultipartFile imageFile 并保存到磁盘
     @Access(level = AccessLevel.ADMIN)
     @RequestMapping(value = "/create", method = RequestMethod.POST)
-    public APIResponse create(Heritage heritage, @RequestParam(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
+    public APIResponse create(Food food, @RequestParam(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
         if (imageFile != null && !imageFile.isEmpty()) {
+            // 确保文件名唯一
             String newFileName = System.currentTimeMillis() + "_" + imageFile.getOriginalFilename();
-            // 保存到 server/upload/image/ 目录下
+            // 保存到当前项目 server 目录下的 upload/image/ 文件夹中
             File dest = new File(System.getProperty("user.dir") + "/upload/image/" + newFileName);
             if (!dest.getParentFile().exists()) {
                 dest.getParentFile().mkdirs();
             }
             imageFile.transferTo(dest);
-            heritage.setImage(newFileName);
+            // 存入数据库的是图片名称
+            food.setImage(newFileName);
         }
-        heritage.setCreateTime(String.valueOf(System.currentTimeMillis()));
-        service.save(heritage);
+        food.setCreateTime(String.valueOf(System.currentTimeMillis()));
+        service.save(food);
         return new APIResponse(ResponeCode.SUCCESS, "创建成功");
     }
 
-    // 🌟 修改：支持更新时替换图片
+    // 🌟 核心修改：支持更新时的图片替换
     @Access(level = AccessLevel.ADMIN)
     @RequestMapping(value = "/update", method = RequestMethod.POST)
-    public APIResponse update(Heritage heritage, @RequestParam(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
+    public APIResponse update(Food food, @RequestParam(value = "imageFile", required = false) MultipartFile imageFile) throws IOException {
         if (imageFile != null && !imageFile.isEmpty()) {
             String newFileName = System.currentTimeMillis() + "_" + imageFile.getOriginalFilename();
             File dest = new File(System.getProperty("user.dir") + "/upload/image/" + newFileName);
@@ -69,9 +71,9 @@ public class HeritageController {
                 dest.getParentFile().mkdirs();
             }
             imageFile.transferTo(dest);
-            heritage.setImage(newFileName);
+            food.setImage(newFileName);
         }
-        service.updateById(heritage);
+        service.updateById(food);
         return new APIResponse(ResponeCode.SUCCESS, "更新成功");
     }
 

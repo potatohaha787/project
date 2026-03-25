@@ -14,13 +14,13 @@
       <a class="nav-item" :class="{ 'active': route.name === 'scenic' }" @click="goUserCenter('scenic')">景点探索</a>
       <a class="nav-item" :class="{ 'active': route.name === 'heritage' || route.name === 'heritageDetail' }"
         @click="goUserCenter('heritage')">非遗文化</a>
-      <a class="nav-item" :class="{ 'active': route.name === 'food' }">香山美食</a>
-      <a class="nav-item" :class="{ 'active': route.name === 'guide' }">游记攻略</a>
+      <a class="nav-item" :class="{ 'active': route.name === 'food' }" @click="goUserCenter('food')">香山美食</a>
+      <a class="nav-item" :class="{ 'active': route.name === 'guide' }" @click="goUserCenter('guide')">游记攻略</a>
     </nav>
 
     <div class="search-entry">
       <img :src="SearchIcon" class="search-icon">
-      <input placeholder="搜索中山景点/美食/文化..." ref="keywordRef" @keyup.enter="search" />
+      <input v-model="keyword" placeholder="搜索中山景点/美食/文化..." @keyup.enter="search" />
     </div>
 
     <div class="right-view">
@@ -68,7 +68,7 @@ const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
 
-const keywordRef = ref();
+const keyword = ref();
 let loading = ref(false);
 let msgVisible = ref(false);
 let msgData = ref([] as any);
@@ -90,7 +90,14 @@ const handleScroll = () => {
 };
 
 const getMessageList = () => { };
-const search = () => { };
+const search = () => {
+  if (keyword.value.trim()) {
+    router.push({
+      name: 'search',
+      query: { keyword: keyword.value }
+    });
+  }
+};
 const goLogin = () => { router.push({ name: 'login' }) };
 // 跳转页面的通用方法
 const goUserCenter = (menuName: string) => { router.push({ name: menuName }) };

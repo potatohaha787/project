@@ -32,9 +32,19 @@ const constantRouterMap = [
         component: () => import('/@/views/index/history.vue')
       },
       {
+        path: 'foodDetail',
+        name: 'foodDetail',
+        component: () => import('/@/views/index/foodDetail.vue')
+      },
+      {
         path: 'celebrity',
         name: 'celebrity',
         component: () => import('/@/views/index/celebrity.vue')
+      },
+      {
+        path: 'food',
+        name: 'food',
+        component: () => import('/@/views/index/food.vue')
       },
       {
         path: 'heritage',
@@ -60,6 +70,11 @@ const constantRouterMap = [
         path: 'detail',
         name: 'detail',
         component: () => import('/@/views/index/detail.vue')
+      },
+      {
+        path: 'guide',
+        name: 'guide',
+        component: () => import('/@/views/index/guide.vue')
       },
       {
         path: 'confirm',
@@ -163,14 +178,14 @@ const constantRouterMap = [
     component: () => import('/@/views/admin/main.vue'),
     children: [
       { path: 'overview', name: 'overview', component: () => import('/@/views/admin/overview.vue') },
-      { path: 'order', name: 'order', component: () => import('/@/views/admin/order.vue') },
       { path: 'adminCelebrity', name: 'adminCelebrity', component: () => import('/@/views/admin/celebrity.vue') },
       { path: 'adminHistory', name: 'adminHistory', component: () => import('/@/views/admin/adminHistory.vue') },
       { path: 'thing', name: 'thing', component: () => import('/@/views/admin/thing.vue') },
       { path: 'comment', name: 'comment', component: () => import('/@/views/admin/comment.vue') },
       { path: 'user', name: 'user', component: () => import('/@/views/admin/user.vue') },
       { path: 'classification', name: 'classification', component: () => import('/@/views/admin/classification.vue') },
-      { path: 'tag', name: 'tag', component: () => import('/@/views/admin/tag.vue') },
+      { path: 'adminHeritage', name: 'adminHeritage', component: () => import('/@/views/admin/adminHeritage.vue') },
+      { path: 'adminFood', name: 'adminFood', component: () => import('/@/views/admin/adminFood.vue') },
       { path: 'ad', name: 'ad', component: () => import('/@/views/admin/ad.vue') },
       { path: 'notice', name: 'notice', component: () => import('/@/views/admin/notice.vue') },
       { path: 'loginLog', name: 'loginLog', component: () => import('/@/views/admin/login-log.vue') },
