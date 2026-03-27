@@ -172,30 +172,36 @@ const currentTab = ref('all')
 const currentPage = ref(1)
 
 // 核心：从数据库获取列表数据
+// 核心：从数据库获取列表数据
 const fetchPostList = async () => {
   try {
-    // 构造请求参数，如果是 all 则不传 type
     const queryParams = {
       type: currentTab.value === 'all' ? '' : currentTab.value
     }
     const res = await getPostListApi(queryParams)
 
-    // 后端返回的数据映射给前端
-    // 注意：我们将后端的 createTime 时间戳格式化，并将 content 剥离 HTML 标签作为简短描述(desc)
+    // 将后端的数据映射为前端卡片需要的格式
     topicList.value = res.data.map(item => ({
       id: item.id,
+
+      // 1. 动态判断标签颜色和文字 (绿/蓝/黄)
       type: item.type === 'guide' ? 'tag-share' : (item.type === 'ask' ? 'tag-ask' : 'tag-mate'),
-      tag: item.type === 'guide' ? '分享' : (item.type === 'ask' ? '求助' : '结伴'),
+      tag: item.type === 'guide' ? '游记' : (item.type === 'ask' ? '求助' : (item.type === 'share' ? '分享' : '结伴')),
+
       title: item.title,
-      // 去掉HTML标签，截取前80个字作为列表简介
+
+      // 2. 去掉富文本 HTML 标签，截取前 80 个字作为列表简介
       desc: item.content ? item.content.replace(/<[^>]+>/g, '').substring(0, 80) + '...' : '',
-      // 如果没有头像，给个默认头像
+
+      // 3. 动态绑定刚刚在后端查出来的作者头像和昵称 (如果没有，给个默认兜底)
       avatar: item.authorAvatar || 'https://joeschmoe.io/api/v1/random',
       author: item.authorName || '香山吧友',
-      // 这里简易处理时间，实际项目中建议用 dayjs 格式化时间戳
+
+      // 4. 将后端传来的时间戳 (如 1698127200000) 转化为可读日期
       time: new Date(Number(item.createTime)).toLocaleDateString(),
+
       views: item.pv || 0,
-      replies: item.likeCount || 0 // 暂时用点赞数代替回复数占位
+      replies: item.likeCount || 0
     }))
   } catch (error) {
     console.error("获取列表失败:", error)

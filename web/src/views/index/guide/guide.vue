@@ -25,7 +25,7 @@
             </div>
 
             <div class="guide-grid">
-              <div class="guide-card" v-for="item in guideList" :key="item.id">
+              <div class="guide-card" v-for="item in guideList" :key="item.id" @click="goToGuideDetail(item.id)">
                 <div class="card-cover">
                   <img :src="item.cover" :alt="item.title" />
                   <div class="location-tag">📍 {{ item.location }}</div>
@@ -55,7 +55,7 @@
             </div>
 
             <div class="forum-box">
-              <div class="forum-item" v-for="topic in forumList" :key="topic.id">
+              <div class="forum-item" v-for="topic in forumList" :key="topic.id" @click="goToForumDetail(topic.id)">
                 <div class="topic-main">
                   <span class="topic-tag" :class="topic.type">{{ topic.tag }}</span>
                   <h4 class="topic-title">{{ topic.title }}</h4>
@@ -123,13 +123,17 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
+
+// 引入您的接口和常量
+import { getPostListApi } from '/@/api/post'
+import { BASE_URL } from '/@/store/constants'
+
+// 作为默认兜底的本地图片
 import ImgTourism from '/@/assets/images/tourism.jpg'
-import ImgPlace from '/@/assets/images/place.jpg'
-import ImgBg2 from '/@/assets/images/bg2.jpg'
 
 const router = useRouter()
 
@@ -140,26 +144,78 @@ const onSearch = () => {
   // TODO: 对接后台搜索接口
 }
 
-// --- 模拟游记数据 ---
-const guideList = ref([
-  {
-    id: 1, title: '周末逃离城市计划：沉醉在崖口村的金色稻浪', brief: '不想走远，就去中山崖口村吧。这里有绝美的海边日落，还有成片成片的稻田...', cover: ImgTourism, location: '南朗崖口村', author: '旅行体验师', avatar: 'https://joeschmoe.io/api/v1/jess', views: 3420, likes: 256
-  },
-  {
-    id: 2, title: '跟着伟人足迹，重走翠亨村（附详细打卡路线）', brief: '作为中山人不可不知的历史，第一次来中山必去的孙中山故居及周边徒步指南。', cover: ImgPlace, location: '翠亨新区', author: '历史寻踪客', avatar: 'https://joeschmoe.io/api/v1/jon', views: 8901, likes: 1024
-  },
-  {
-    id: 3, title: '本地土著吐血整理：石岐老街藏着的地道美食地图', brief: '拒绝网红店！这篇攻略带你钻进石岐的巷子，寻找街坊从小吃到大的宝藏味道。', cover: ImgBg2, location: '石岐老街', author: '贪吃的小胖', avatar: 'https://joeschmoe.io/api/v1/jia', views: 12050, likes: 3200
-  }
-])
+// 响应式数据：游记与热门讨论
+const guideList = ref([])
+const forumList = ref([])
 
-// --- 模拟论坛数据 ---
-const forumList = ref([
-  { id: 1, type: 'tag-ask', tag: '求助', title: '国庆带父母去中山，住哪个区比较方便？', desc: '父母年纪大了不方便走太多路，希望周围有早茶店，去景点也近...', replies: 24, time: '2小时前' },
-  { id: 2, type: 'tag-share', tag: '分享', title: '刚避雷！千万别在这个时候去紫马岭公园！', desc: '给大家提个醒，周末下午四点多停车位完全爆满，建议大家早上早点去。', replies: 89, time: '5小时前' },
-  { id: 3, type: 'tag-mate', tag: '约伴', title: '这周末有一起去五桂山大尖山徒步的吗？', desc: '本人女，有一定户外经验，求被捡或者组队，目前已有2人。', replies: 12, time: '昨天' },
-  { id: 4, type: 'tag-ask', tag: '求助', title: '除了石岐乳鸽，还有什么能带走做特产的？', desc: '想带点伴手礼回去给同事，咀香园杏仁饼买过了，求推荐别的。', replies: 45, time: '昨天' }
-])
+// 🌟 核心：从后端获取数据
+const fetchCommunityData = async () => {
+  try {
+    // 1. 获取所有帖子数据
+    const res = await getPostListApi()
+    const allPosts = res.data || []
+
+    // 2. 筛选出 "游记" 类型的数据 (左侧展示)
+    guideList.value = allPosts
+      .filter(item => item.type === 'guide')
+      .map(item => ({
+        id: item.id,
+        title: item.title,
+        // 去除 HTML 标签提取纯文本作为摘要
+        brief: item.content ? item.content.replace(/<[^>]+>/g, '').substring(0, 60) + '...' : '暂无简介',
+        // 拼接真实图片路径
+        cover: item.cover ? (BASE_URL + '/api/upload/image/' + item.cover) : ImgTourism,
+        location: item.location || '中山市',
+        author: item.authorName || '香山体验师',
+        avatar: item.authorAvatar || 'https://joeschmoe.io/api/v1/random',
+        views: item.pv || 0,
+        likes: item.likeCount || 0
+      }))
+
+    // 3. 筛选出 "非游记" 类型的数据 (右侧热门讨论，取前 5 条)
+    forumList.value = allPosts
+      .filter(item => item.type !== 'guide')
+      .slice(0, 5) // 截取最新的 5 条
+      .map(item => ({
+        id: item.id,
+        type: item.type === 'ask' ? 'tag-ask' : (item.type === 'share' ? 'tag-share' : 'tag-mate'),
+        tag: item.type === 'ask' ? '求助' : (item.type === 'share' ? '分享' : '结伴'),
+        title: item.title,
+        // 提取简短的内容预览
+        desc: item.content ? item.content.replace(/<[^>]+>/g, '').substring(0, 30) + '...' : '',
+        replies: item.likeCount || 0, // 暂时用点赞数代替回复数占位
+        // 格式化时间戳
+        time: new Date(Number(item.createTime)).toLocaleDateString()
+      }))
+
+  } catch (error) {
+    console.error("获取社区数据失败:", error)
+  }
+}
+
+// 页面挂载时调用接口获取数据
+onMounted(() => {
+  fetchCommunityData()
+})
+
+// --- 跳转逻辑 ---
+const goToGuideDetail = (id) => {
+  // 假设您的游记详情页路由配置名为 travelogueDetail 或者直接用 path
+  router.push({ path: '/guide-detail', query: { id: id } })
+}
+
+const goToForumDetail = (id) => {
+  // 跳转到我们之前设计的社区交流详情页
+  router.push({ path: '/forum-detail', query: { id: id } })
+}
+
+const goToPublish1 = () => {
+  router.push({ name: 'publishGuide' })
+}
+
+const goToPublish2 = () => {
+  router.push({ name: 'ForumList' })
+}
 
 // --- AI 助手相关逻辑 ---
 const aiDrawerVisible = ref(false)
@@ -180,7 +236,6 @@ const sendQuickPrompt = (text) => {
   sendAiMessage()
 }
 
-// ⭐ 核心：发送消息并对接 AI 接口的地方
 const sendAiMessage = async () => {
   if (!aiInput.value.trim()) return
 
@@ -190,19 +245,9 @@ const sendAiMessage = async () => {
   isAiTyping.value = true
   scrollToBottom()
 
-  // -------------------------------------------------------------
-  // TODO: 在这里发起你的 Axios 请求，对接后端的 AI 接口
-  // const res = await axios.post('/api/ai/chat', { prompt: userText })
-  // const aiResponse = res.data.reply
-  // -------------------------------------------------------------
-
-  // 这里用 setTimeout 模拟 AI 思考和回复的过程
   setTimeout(() => {
     isAiTyping.value = false
-
-    // 模拟一段流式或者富文本的 AI 回复
     let fakeReply = `好的，关于“<b>${userText}</b>”，我为您提供以下建议：<br/><br/>中山是一座充满魅力的城市，建议您可以从孙中山故居出发，感受历史底蕴；中午前往石岐品尝正宗乳鸽；下午漫步岐江边，享受慢时光。<br/><br/>需要我为您生成详细的时间排期表吗？`
-
     chatList.value.push({ role: 'ai', content: fakeReply })
     scrollToBottom()
   }, 1500)
@@ -215,17 +260,6 @@ const scrollToBottom = () => {
     }
   })
 }
-
-const goToPublish1 = () => {
-  // 这里的 name 要和您在路由配置文件中定义的一致
-  router.push({ name: 'publishGuide' })
-}
-
-const goToPublish2 = () => {
-  // 这里的 name 要和您在路由配置文件中定义的一致
-  router.push({ name: 'ForumList' })
-}
-
 </script>
 
 <style scoped lang="less">

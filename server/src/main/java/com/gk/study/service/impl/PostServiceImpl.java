@@ -3,8 +3,11 @@ package com.gk.study.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gk.study.entity.Post;
+import com.gk.study.entity.User; // 引入 User 实体
 import com.gk.study.mapper.PostMapper;
 import com.gk.study.service.PostService;
+import com.gk.study.service.UserService; // 引入 UserService
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -13,30 +16,44 @@ import java.util.List;
 @Service
 public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements PostService {
 
+    // 注入 UserService 来获取用户信息
+    @Autowired
+    private UserService userService;
+
     @Override
     public List<Post> getPostList(String type, String keyword) {
         QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
-        // 状态为1代表正常发布的
-        queryWrapper.eq("status", "1");
+        queryWrapper.eq("status", "1"); // 只查正常发布的帖子
 
-        // 如果传了类型 (如 guide, ask)，则按类型筛选
         if (!StringUtils.isEmpty(type) && !"all".equals(type)) {
             queryWrapper.eq("type", type);
         }
 
-        // 如果有关键字，进行标题或内容的模糊搜索
         if (!StringUtils.isEmpty(keyword)) {
             queryWrapper.and(wrapper ->
                     wrapper.like("title", keyword).or().like("content", keyword)
             );
         }
 
-        // 按照时间倒序排列
         queryWrapper.orderByDesc("create_time");
+        List<Post> postList = this.list(queryWrapper);
 
-        return this.list(queryWrapper);
+        // 🌟 核心：遍历帖子，附加上真实用户的昵称和头像
+        // 🌟 核心：遍历帖子，附加上真实用户的昵称和头像
+        for (Post post : postList) {
+            if (post.getUserId() != null) {
+                User user = userService.getUserDetail(String.valueOf(post.getUserId()));
+
+                if (user != null) {
+                    // 如果有昵称显示昵称，没有则显示用户名
+                    post.setAuthorName(StringUtils.isEmpty(user.getNickname()) ? user.getUsername() : user.getNickname());
+                    post.setAuthorAvatar(user.getAvatar());
+                }
+            }
+        }
+
+        return postList;
     }
-
     @Override
     public void createPost(Post post) {
         post.setCreateTime(String.valueOf(System.currentTimeMillis()));

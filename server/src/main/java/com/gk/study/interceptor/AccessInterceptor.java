@@ -54,6 +54,11 @@ public class AccessInterceptor extends HandlerInterceptorAdapter {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
 
+        // 🌟🌟🌟 新增的核心代码：遇到 OPTIONS 预检请求直接放行，防止跨域报错拦截！
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+
         request.setAttribute("_startTime", System.currentTimeMillis());
 
         //**********************验权代码*************************
@@ -96,7 +101,6 @@ public class AccessInterceptor extends HandlerInterceptorAdapter {
             }
         }
 
-
         return true;
     }
 
@@ -121,7 +125,11 @@ public class AccessInterceptor extends HandlerInterceptorAdapter {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         opLog.setReTime(formatter.format(new Date()));
         opLog.setAccessTime(String.valueOf(diff));
-        service.createOpLog(opLog);
+
+        // 确保不会因为 service 为 null 而报错掩盖跨域问题
+        if (service != null) {
+            service.createOpLog(opLog);
+        }
     }
 
     public void writeResponse(HttpServletResponse response, APIResponse apiResponse) throws IOException {
