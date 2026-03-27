@@ -74,7 +74,7 @@ const constantRouterMap = [
       {
         path: 'guide',
         name: 'guide',
-        component: () => import('/@/views/index/guide.vue')
+        component: () => import('/@/views/index/guide/guide.vue')
       },
       {
         path: 'confirm',
@@ -85,6 +85,26 @@ const constantRouterMap = [
         path: 'pay',
         name: 'pay',
         component: () => import('/@/views/index/pay.vue')
+      },
+      {
+        path: 'publishGuide',
+        name: 'publishGuide',
+        component: () => import('/@/views/index/guide/PublishGuide.vue'),
+      },
+      {
+        path: 'GuideDetail',
+        name: 'GuideDetail',
+        component: () => import('/@/views/index/guide/GuideDetail.vue'),
+      },
+      {
+        path: 'ForumDetail',
+        name: 'ForumDetail',
+        component: () => import('/@/views/index/guide/ForumDetail.vue'),
+      },
+      {
+        path: 'ForumList',
+        name: 'ForumList',
+        component: () => import('/@/views/index/guide/ForumList.vue'),
       },
       {
         path: 'search',

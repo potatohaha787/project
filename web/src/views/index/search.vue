@@ -3,19 +3,26 @@
     <Header />
 
     <div class="search-container">
+      <div class="decoration-leaf"></div>
+
       <div class="search-header">
-        <h1>搜索结果</h1>
-        <p class="search-meta">关于 <span>“{{ currentKeyword }}”</span> 的搜索结果，共找到 <span>{{ resultList.length }}</span> 条内容
+        <div class="title-wrapper">
+          <span class="sub-title">EXPLORE ZHONGSHAN</span>
+          <h1>探索中山</h1>
+          <div class="line"></div>
+        </div>
+        <p class="search-meta">
+          为您找到关于 <span>“{{ currentKeyword }}”</span> 的文旅灵感，共 <span>{{ resultList.length }}</span> 处
         </p>
       </div>
 
       <div v-if="loading" class="status-box">
-        <a-spin size="large" tip="正在为您努力寻找..." />
+        <a-spin size="large" tip="正在翻阅中山文旅画卷..." />
       </div>
 
       <div v-else-if="resultList.length === 0" class="status-box empty">
-        <img src="/@/assets/images/searchIcon.svg" alt="空" />
-        <p>抱歉，没有找到相关内容，换个词试试吧？</p>
+        <div class="empty-icon">🍃</div>
+        <p>暂未发现相关足迹，建议尝试搜索“孙中山故居”或“石岐”</p>
       </div>
 
       <div v-else class="result-grid">
@@ -23,14 +30,17 @@
           <div class="card-cover">
             <img :src="item.cover ? (BASE_URL + '/api/staticfiles/image/' + item.cover) : '/images/place.jpg'"
               alt="封面" />
+            <div class="card-tag" v-if="item.tags">{{ item.tags }}</div>
           </div>
           <div class="card-info">
             <h3 class="card-title">{{ item.title }}</h3>
-            <p class="card-desc">{{ item.description || '暂无简介' }}</p>
+            <p class="card-desc">{{ item.description || '在这里，遇见中山的过去与未来。' }}</p>
             <div class="card-bottom">
-              <span class="price" v-if="item.price > 0">￥{{ item.price }}</span>
-              <span class="price free" v-else>免费</span>
-              <span class="location">📍 {{ item.address || '中山市' }}</span>
+              <div class="price-box">
+                <span class="unit" v-if="item.price > 0">￥</span>
+                <span class="price" :class="{ free: item.price <= 0 }">{{ item.price > 0 ? item.price : '免费开放' }}</span>
+              </div>
+              <span class="location"><i class="iconfont icon-location"></i> {{ item.address || '中山市' }}</span>
             </div>
           </div>
         </div>
@@ -97,30 +107,70 @@ const goToDetail = (id) => {
 </script>
 
 <style scoped lang="less">
-@primary-color: #0b6a65;
+// 定义中山文旅专属色系
+@zs-green: #064e3b; // 深翠绿
+@zs-accent: #d97706; // 琥珀橙
+@zs-bg: #f8f9fa;
 
 .search-page {
-  background-color: #f4f6f9;
+  background-color: @zs-bg;
+  background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+  background-size: 40px 40px; // 微弱的点状底纹增加纸质感
   min-height: 100vh;
+  position: relative;
 }
 
 .search-container {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 120px 20px 80px;
-  min-height: 60vh;
+  padding: 140px 20px 100px;
+  position: relative;
+  z-index: 1;
+}
+
+// 装饰性的叶子图标或形状
+.decoration-leaf {
+  position: absolute;
+  top: 100px;
+  right: 20px;
+  width: 150px;
+  height: 150px;
+  background: url('https://api.iconify.design/ri:leaf-fill.svg?color=%23064e3b&alpha=0.05') no-repeat;
+  z-index: -1;
 }
 
 .search-header {
-  margin-bottom: 40px;
-  border-bottom: 2px solid #e5e7eb;
-  padding-bottom: 20px;
+  margin-bottom: 60px;
+  text-align: left;
 
-  h1 {
-    font-size: 32px;
-    font-weight: bold;
-    color: #1f2937;
-    margin-bottom: 10px;
+  .title-wrapper {
+    position: relative;
+    margin-bottom: 15px;
+
+    .sub-title {
+      font-size: 12px;
+      letter-spacing: 4px;
+      color: @zs-accent;
+      font-weight: bold;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      font-size: 38px;
+      font-family: "PingFang SC", "Microsoft YaHei", serif;
+      font-weight: 800;
+      color: #111827;
+      margin: 0;
+    }
+
+    .line {
+      width: 60px;
+      height: 4px;
+      background: @zs-green;
+      margin-top: 10px;
+      border-radius: 2px;
+    }
   }
 
   .search-meta {
@@ -128,110 +178,136 @@ const goToDetail = (id) => {
     color: #6b7280;
 
     span {
-      color: @primary-color;
-      font-weight: bold;
+      color: @zs-green;
+      font-weight: 600;
+      border-bottom: 1px solid @zs-green;
       margin: 0 4px;
     }
   }
 }
 
-.status-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 0;
-  color: #9ca3af;
-
-  &.empty img {
-    width: 120px;
-    opacity: 0.5;
-    margin-bottom: 20px;
-  }
-}
-
-/* 搜索结果网格排版 */
+/* 结果网格优化 */
 .result-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 32px;
 }
 
 .result-card {
-  background: #fff;
-  border-radius: 12px;
+  background: #ffffff;
+  border-radius: 4px; // 更加硬朗、高级的微圆角
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  border: 1px solid #eee;
+  position: relative;
 
   &:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    border-color: @zs-green;
   }
 
   .card-cover {
-    height: 200px;
+    height: 220px;
     overflow: hidden;
+    position: relative;
 
     img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.5s;
+      transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    .card-tag {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 4px 12px;
+      font-size: 12px;
+      color: @zs-green;
+      font-weight: bold;
+      backdrop-filter: blur(4px);
     }
   }
 
   &:hover .card-cover img {
-    transform: scale(1.05);
+    transform: scale(1.1);
   }
 
   .card-info {
-    padding: 20px;
+    padding: 24px;
 
     .card-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #1f2937;
-      margin-bottom: 8px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 12px;
     }
 
     .card-desc {
       font-size: 14px;
-      color: #6b7280;
-      margin-bottom: 16px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      height: 44px;
     }
 
     .card-bottom {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-top: 1px solid #f3f4f6;
       padding-top: 16px;
+      border-top: 1px dashed #eee;
 
-      .price {
-        font-size: 18px;
-        color: #ef4444;
-        font-weight: bold;
+      .price-box {
+        .unit {
+          font-size: 14px;
+          color: @zs-accent;
+        }
 
-        &.free {
-          color: #10b981;
-          font-size: 16px;
+        .price {
+          font-size: 20px;
+          color: @zs-accent;
+          font-weight: 800;
+
+          &.free {
+            color: @zs-green;
+            font-size: 15px;
+            letter-spacing: 1px;
+          }
         }
       }
 
       .location {
-        font-size: 12px;
-        color: #9ca3af;
+        font-size: 13px;
+        color: #999;
+        display: flex;
+        align-items: center;
+        gap: 4px;
       }
     }
+  }
+}
+
+// 状态箱
+.status-box {
+  background: white;
+  border-radius: 12px;
+  padding: 100px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  &.empty .empty-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+  }
+
+  p {
+    color: #9ca3af;
   }
 }
 </style>

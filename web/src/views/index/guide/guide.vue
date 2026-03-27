@@ -21,7 +21,7 @@
           <a-col :xs="24" :lg="16">
             <div class="section-header">
               <h2>精选游记</h2>
-              <a-button type="link" class="more-btn">发布我的游记 &rarr;</a-button>
+              <a-button type="link" class="more-btn" @click="goToPublish1">发布我的游记 &rarr;</a-button>
             </div>
 
             <div class="guide-grid">
@@ -51,7 +51,7 @@
           <a-col :xs="24" :lg="8">
             <div class="section-header">
               <h2>热门讨论</h2>
-              <a-button type="link" class="more-btn">去交流吧 &rarr;</a-button>
+              <a-button type="link" class="more-btn" @click="goToPublish2">去交流吧 &rarr;</a-button>
             </div>
 
             <div class="forum-box">
@@ -72,7 +72,7 @@
               <div class="ai-poster-content">
                 <h3>💡 懒得做攻略？</h3>
                 <p>唤醒 AI 伴游，一键生成专属你的中山行程计划！</p>
-                <a-button type="primary" shape="round">呼叫 AI 助手</a-button>
+                <a-button type="primary" shape="round" class="ai-poster-btn">呼叫 AI 助手</a-button>
               </div>
             </div>
           </a-col>
@@ -91,14 +91,14 @@
       <div class="chat-container" ref="chatContainer">
         <div v-for="(msg, index) in chatList" :key="index"
           :class="['chat-bubble-wrapper', msg.role === 'ai' ? 'ai-msg' : 'user-msg']">
-          <a-avatar v-if="msg.role === 'ai'" class="chat-avatar" style="background-color: #0ea5e9;">AI</a-avatar>
+          <a-avatar v-if="msg.role === 'ai'" class="chat-avatar" style="background-color: #064e3b;">AI</a-avatar>
 
           <div class="chat-bubble" v-html="msg.content"></div>
 
           <a-avatar v-if="msg.role === 'user'" class="chat-avatar" src="https://joeschmoe.io/api/v1/random" />
         </div>
         <div v-if="isAiTyping" class="chat-bubble-wrapper ai-msg">
-          <a-avatar class="chat-avatar" style="background-color: #0ea5e9;">AI</a-avatar>
+          <a-avatar class="chat-avatar" style="background-color: #064e3b;">AI</a-avatar>
           <div class="chat-bubble typing-indicator">
             <span></span><span></span><span></span>
           </div>
@@ -113,7 +113,7 @@
         </div>
         <div class="input-wrapper">
           <a-input v-model:value="aiInput" placeholder="告诉 AI 你的旅行想法..." @pressEnter="sendAiMessage" />
-          <a-button type="primary" @click="sendAiMessage" :loading="isAiTyping">发送</a-button>
+          <a-button type="primary" class="send-btn" @click="sendAiMessage" :loading="isAiTyping">发送</a-button>
         </div>
       </div>
     </a-drawer>
@@ -124,11 +124,14 @@
 
 <script setup>
 import { ref, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
 import ImgTourism from '/@/assets/images/tourism.jpg'
 import ImgPlace from '/@/assets/images/place.jpg'
 import ImgBg2 from '/@/assets/images/bg2.jpg'
+
+const router = useRouter()
 
 // --- 基础状态 ---
 const searchQuery = ref('')
@@ -212,13 +215,26 @@ const scrollToBottom = () => {
     }
   })
 }
+
+const goToPublish1 = () => {
+  // 这里的 name 要和您在路由配置文件中定义的一致
+  router.push({ name: 'publishGuide' })
+}
+
+const goToPublish2 = () => {
+  // 这里的 name 要和您在路由配置文件中定义的一致
+  router.push({ name: 'ForumList' })
+}
+
 </script>
 
 <style scoped lang="less">
 /* --- 全局主题与色彩 --- */
 @bg-color: #f1f5f9;
-@primary-cyan: #0ea5e9;
-/* 旅游清新蓝绿调 */
+@zs-green: #064e3b;
+/* 深翠绿 */
+@zs-yellow: #d97706;
+/* 琥珀黄 */
 @dark-text: #1e293b;
 @light-text: #64748b;
 
@@ -231,7 +247,7 @@ const scrollToBottom = () => {
 .guide-hero {
   position: relative;
   padding: 160px 20px 100px;
-  background-image: url(/@/assets/images/tourism.jpg);
+  background-image: url(/@/assets/images/bg7.jpg);
   background-size: cover;
   background-position: center;
   display: flex;
@@ -245,8 +261,7 @@ const scrollToBottom = () => {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(15, 23, 42, 0.6);
-    /* 深色半透明遮罩 */
+    background: rgb(9 6 30 / 60%);
   }
 
   .hero-content {
@@ -256,6 +271,7 @@ const scrollToBottom = () => {
     width: 100%;
 
     .hero-title {
+      font-family: 'Noto Serif SC', serif;
       font-size: 48px;
       font-weight: 800;
       color: #fff;
@@ -273,10 +289,15 @@ const scrollToBottom = () => {
       max-width: 600px;
       margin: 0 auto;
 
-      /* 覆盖 Antd 搜索框默认的主题色为蓝绿色 */
+      /* 覆盖 Antd 搜索框默认的主题色为深翠绿 */
       :deep(.ant-input-search-button) {
-        background-color: @primary-cyan;
-        border-color: @primary-cyan;
+        background-color: @zs-green;
+        border-color: @zs-green;
+
+        &:hover {
+          background-color: lighten(@zs-green, 10%);
+          border-color: lighten(@zs-green, 10%);
+        }
       }
     }
   }
@@ -306,8 +327,12 @@ const scrollToBottom = () => {
   }
 
   .more-btn {
-    color: @primary-cyan;
+    color: @zs-green;
     font-weight: 500;
+
+    &:hover {
+      color: @zs-yellow;
+    }
   }
 }
 
@@ -433,7 +458,8 @@ const scrollToBottom = () => {
   }
 
   &:hover .topic-title {
-    color: @primary-cyan;
+    color: @zs-green;
+    /* 悬停颜色改为深翠绿 */
   }
 
   .topic-main {
@@ -455,13 +481,13 @@ const scrollToBottom = () => {
       }
 
       &.tag-share {
-        background: #dcfce7;
-        color: #0369a1;
+        background: lighten(@zs-green, 60%);
+        color: @zs-green;
       }
 
       &.tag-mate {
         background: #fef3c7;
-        color: #166534;
+        color: @zs-yellow;
       }
     }
 
@@ -494,7 +520,8 @@ const scrollToBottom = () => {
 
 /* AI 引导海报 */
 .ai-poster {
-  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+  /* 改为深翠绿渐变背景 */
+  background: linear-gradient(135deg, @zs-green 0%, darken(@zs-green, 10%) 100%);
   border-radius: 16px;
   padding: 30px 20px;
   color: #fff;
@@ -504,11 +531,12 @@ const scrollToBottom = () => {
 
   &:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(2, 132, 199, 0.3);
+    box-shadow: 0 10px 20px rgba(6, 78, 59, 0.3);
   }
 
   h3 {
-    color: #fff;
+    color: @zs-yellow;
+    /* 标题使用琥珀黄点缀 */
     font-size: 20px;
     font-weight: bold;
     margin-bottom: 10px;
@@ -519,6 +547,17 @@ const scrollToBottom = () => {
     opacity: 0.9;
     margin-bottom: 20px;
   }
+
+  .ai-poster-btn {
+    background-color: @zs-yellow;
+    border-color: @zs-yellow;
+    color: #fff;
+
+    &:hover {
+      background-color: lighten(@zs-yellow, 5%);
+      border-color: lighten(@zs-yellow, 5%);
+    }
+  }
 }
 
 /* --- 3. 悬浮 AI 按钮 --- */
@@ -526,21 +565,22 @@ const scrollToBottom = () => {
   position: fixed;
   bottom: 40px;
   right: 40px;
-  background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+  /* 悬浮按钮改为显眼的琥珀黄渐变 */
+  background: linear-gradient(135deg, @zs-yellow, darken(@zs-yellow, 10%));
   color: #fff;
   padding: 12px 24px;
   border-radius: 30px;
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 10px 25px rgba(14, 165, 233, 0.4);
+  box-shadow: 0 10px 25px rgba(217, 119, 6, 0.4);
   cursor: pointer;
   z-index: 1000;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   &:hover {
     transform: scale(1.05) translateY(-5px);
-    box-shadow: 0 15px 35px rgba(14, 165, 233, 0.5);
+    box-shadow: 0 15px 35px rgba(217, 119, 6, 0.5);
   }
 
   .fab-icon {
@@ -574,7 +614,8 @@ const scrollToBottom = () => {
     flex-direction: row;
 
     .chat-bubble {
-      background-color: @primary-cyan;
+      background-color: @zs-green;
+      /* 用户发送的消息气泡改为深翠绿 */
       color: #fff;
       border-radius: 16px 4px 16px 16px;
     }
@@ -597,6 +638,11 @@ const scrollToBottom = () => {
   padding: 12px 16px;
   font-size: 14px;
   word-wrap: break-word;
+
+  :deep(b) {
+    color: @zs-yellow;
+    /* 聊天里的加粗文本使用黄色高亮 */
+  }
 }
 
 /* 输入区 */
@@ -614,15 +660,17 @@ const scrollToBottom = () => {
     span {
       white-space: nowrap;
       background: #f1f5f9;
-      color: @primary-cyan;
+      color: @zs-green;
+      /* 快捷词字体颜色 */
       padding: 4px 12px;
       border-radius: 20px;
       font-size: 12px;
       cursor: pointer;
       transition: background 0.2s;
+      border: 1px solid rgba(6, 78, 59, 0.1);
 
       &:hover {
-        background: #e0f2fe;
+        background: lighten(@zs-green, 60%);
       }
     }
   }
@@ -630,6 +678,16 @@ const scrollToBottom = () => {
   .input-wrapper {
     display: flex;
     gap: 8px;
+
+    .send-btn {
+      background-color: @zs-green;
+      border-color: @zs-green;
+
+      &:hover {
+        background-color: lighten(@zs-green, 5%);
+        border-color: lighten(@zs-green, 5%);
+      }
+    }
   }
 }
 
@@ -644,7 +702,8 @@ const scrollToBottom = () => {
     display: block;
     width: 6px;
     height: 6px;
-    background-color: #94a3b8;
+    background-color: @zs-yellow;
+    /* 动画小点点改为琥珀黄 */
     border-radius: 50%;
     animation: typing 1.4s infinite ease-in-out both;
 

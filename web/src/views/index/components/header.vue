@@ -20,7 +20,7 @@
 
     <div class="search-entry">
       <img :src="SearchIcon" class="search-icon">
-      <input v-model="keyword" placeholder="搜索中山景点/美食/文化..." @keyup.enter="search" />
+      <input v-model="keyword" placeholder="搜索中山景点" @keyup.enter="search" />
     </div>
 
     <div class="right-view">

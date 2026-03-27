@@ -132,6 +132,7 @@ const goFoodDetail = (id) => {
   }
 
   .hero-title {
+    font-family: 'Noto Serif SC', serif;
     font-size: 56px;
     font-weight: 800;
     color: @white-text;
