@@ -141,6 +141,9 @@ import { message } from 'ant-design-vue'
 import { getPostDetailApi, getPostListApi } from '/@/api/post'
 import { BASE_URL } from '/@/store/constants'
 
+// 🌟 1. 引入评论的真实 API
+import { createApi, listThingCommentsApi } from '/@/api/comment'
+
 const route = useRoute()
 const router = useRouter()
 
@@ -172,14 +175,12 @@ const goToDetail = (id) => {
   router.push({ name: 'ForumDetail', query: { id: id } })
 }
 
-// 核心：根据 ID 从数据库获取详情
+// 根据 ID 从数据库获取详情
 const fetchDetail = async (id) => {
   try {
     const res = await getPostDetailApi({ id: id })
     if (res.code === 200 && res.data) {
       const data = res.data
-
-      // 处理标签样式
       let typeClass = 'tag-share'
       let tagText = '分享'
       if (data.type === 'ask') { typeClass = 'tag-ask'; tagText = '求助' }
@@ -205,12 +206,31 @@ const fetchDetail = async (id) => {
   }
 }
 
+// 🌟 2. 新增：从数据库获取当前游记的真实评论列表
+const fetchComments = async (id) => {
+  try {
+    // 借用 thingId 来存放游记/帖子的 ID
+    const res = await listThingCommentsApi({ thingId: id, order: 'recent' })
+    if (res.code === 200) {
+      replyList.value = res.data.map(item => ({
+        id: item.id,
+        avatar: 'https://joeschmoe.io/api/v1/random', // 如果后端评论实体有头像可以用 item.avatar
+        author: item.username || '热心网友',
+        time: item.commentTime || '刚刚',
+        content: item.content,
+        likes: item.likeCount || 0
+      }))
+    }
+  } catch (error) {
+    console.error('获取评论失败', error)
+  }
+}
+
 // 获取右侧热门讨论列表
 const fetchRelatedTopics = async () => {
   try {
     const res = await getPostListApi()
     if (res.code === 200 && res.data) {
-      // 过滤掉当前帖子和游记，只取前5个
       relatedTopics.value = res.data
         .filter(item => item.type !== 'guide' && String(item.id) !== String(route.query.id))
         .slice(0, 5)
@@ -233,62 +253,70 @@ const fetchRelatedTopics = async () => {
   }
 }
 
-// 页面加载时执行
-// --- 新增/修改的代码开始 ---
-
-// 1. 将获取数据的逻辑封装成一个通用方法
+// 通用页面加载逻辑
 const loadPageData = () => {
   const id = route.query.id
   if (id) {
     fetchDetail(id)
     fetchRelatedTopics()
-    // 切换帖子后，平滑滚动回页面顶部
+    fetchComments(id) // 🌟 3. 页面加载时拉取真实评论
     window.scrollTo({ top: 0, behavior: 'smooth' })
   } else {
     message.warning('参数错误：缺少帖子ID')
   }
 }
 
-// 2. 页面初次挂载时执行
 onMounted(() => {
   loadPageData()
 })
 
-// 3. 监听路由 id 的变化。当在当前页面点击右侧列表时，触发数据刷新
 watch(
   () => route.query.id,
   (newId, oldId) => {
-    // 确保有新 id，且确实发生了改变，同时当前仍在 ForumDetail 页面
     if (newId && newId !== oldId && route.name === 'ForumDetail') {
       loadPageData()
     }
   }
 )
-// --- 新增/修改的代码结束 ---
 
-// 提交回复
-const handleSubmitReply = () => {
+// 🌟 4. 彻底重写：将真实数据提交到后端数据库
+const handleSubmitReply = async () => {
   if (!replyValue.value.trim()) {
     message.warning('请输入回复内容')
     return
   }
+
+  // 必须登录才能评论
+  const currentUserId = localStorage.getItem('user_id')
+  if (!currentUserId) {
+    message.warning('请先登录后再回复哦！')
+    return
+  }
+
   isSubmitting.value = true
 
-  // 模拟提交过程
-  setTimeout(() => {
-    replyList.value.unshift({
-      id: Date.now(),
-      avatar: 'https://joeschmoe.io/api/v1/random',
-      author: '当前用户',
-      time: '刚刚',
-      content: replyValue.value.trim(),
-      likes: 0
-    })
+  // 组装表单数据发送给后端
+  const formData = new FormData()
+  formData.append('content', replyValue.value.trim())
+  formData.append('thingId', route.query.id) // 把游记ID存入 thingId 字段关联起来
+  formData.append('userId', currentUserId)
 
-    replyValue.value = ''
+  try {
+    const res = await createApi(formData)
+    if (res.code === 200) {
+      message.success('回复发表成功！')
+      replyValue.value = ''
+      // 🌟 提交成功后，重新拉取一次评论列表刷新页面
+      fetchComments(route.query.id)
+    } else {
+      message.error(res.msg || '回复失败')
+    }
+  } catch (error) {
+    console.error(error)
+    message.error('网络异常，发表失败')
+  } finally {
     isSubmitting.value = false
-    message.success('回复发表成功！')
-  }, 800)
+  }
 }
 </script>
 

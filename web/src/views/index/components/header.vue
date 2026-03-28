@@ -31,7 +31,6 @@
           </a>
           <template #overlay>
             <a-menu>
-              <a-menu-item><a @click="goUserCenter('orderView')">订单中心</a></a-menu-item>
               <a-menu-item><a @click="goUserCenter('userInfoEditView')">个人设置</a></a-menu-item>
               <a-menu-item><a @click="quit()">退出</a></a-menu-item>
             </a-menu>

@@ -246,7 +246,7 @@ const handlePublishSubmit = async () => {
   formData.append('type', publishForm.value.type)
   formData.append('title', publishForm.value.title)
   formData.append('content', publishForm.value.content)
-  const userInfoStr = localStorage.getItem('user_id')
+  const currentUserId = localStorage.getItem('user_id')
   if (!currentUserId) {
     message.warning('请先登录后再发布哦！')
     isPublishing.value = false

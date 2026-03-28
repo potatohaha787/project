@@ -120,7 +120,8 @@ const onSubmit = async (values) => {
 
   try {
     // 1. 获取当前登录用户的 ID
-    const userInfoStr = localStorage.getItem('user_id')
+    const currentUserId = localStorage.getItem('user_id')
+
     if (!currentUserId) {
       message.warning('请先登录后再发布游记哦！')
       isSubmitting.value = false
@@ -157,7 +158,7 @@ const onSubmit = async (values) => {
     // 4. 调用后端接口直接入库
     await createPostApi(formData)
 
-    message.success('🎉 游记发布成功！已直接入库。')
+    message.success('🎉 游记发布成功！')
 
     // 发布成功后清空表单并跳转回交流吧列表页 (路由名字根据您实际配置的调整)
     router.push({ name: 'ForumList' })
