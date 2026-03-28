@@ -21,7 +21,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     private UserService userService;
 
     @Override
-    public List<Post> getPostList(String type, String keyword) {
+    public List<Post> getPostList(String type, String keyword, Long userId) {
         QueryWrapper<Post> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("status", "1"); // 只查正常发布的帖子
 
@@ -35,11 +35,15 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             );
         }
 
+        // 🌟 新增：如果传入了 userId，则只查询该用户的游记/帖子
+        if (userId != null) {
+            queryWrapper.eq("user_id", userId);
+        }
+
         queryWrapper.orderByDesc("create_time");
         List<Post> postList = this.list(queryWrapper);
 
-        // 🌟 核心：遍历帖子，附加上真实用户的昵称和头像
-        // 🌟 核心：遍历帖子，附加上真实用户的昵称和头像
+        // 核心：遍历帖子，附加上真实用户的昵称和头像
         for (Post post : postList) {
             if (post.getUserId() != null) {
                 User user = userService.getUserDetail(String.valueOf(post.getUserId()));

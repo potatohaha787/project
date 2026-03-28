@@ -15,8 +15,8 @@
         <a-form :model="formState" layout="vertical" @finish="onSubmit">
 
           <a-form-item name="cover" class="cover-upload-item">
-            <a-upload-dragger v-model:fileList="fileList" name="file" :multiple="false" action="/api/upload"
-              @change="handleUploadChange" class="custom-dragger">
+            <a-upload-dragger v-model:fileList="fileList" name="file" :multiple="false" :before-upload="beforeUpload"
+              class="custom-dragger">
               <p class="ant-upload-drag-icon">
                 <span class="upload-icon">📸</span>
               </p>
@@ -70,6 +70,9 @@ import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
 import { message } from 'ant-design-vue'
 
+// 引入发布游记的真实接口
+import { createPostApi } from '/@/api/post'
+
 const router = useRouter()
 const isSubmitting = ref(false)
 
@@ -99,15 +102,11 @@ const goBack = () => {
   router.back()
 }
 
-// 处理上传图片逻辑 (这里需要对接您后端的上传接口)
-const handleUploadChange = (info) => {
-  const status = info.file.status
-  if (status === 'done') {
-    message.success(`${info.file.name} 封面上传成功.`)
-    // formState.cover = info.file.response.url // 假设后端返回了图片URL
-  } else if (status === 'error') {
-    message.error(`${info.file.name} 上传失败.`)
-  }
+// 阻止图片的自动上传，将其暂存在 fileList 中等待表单一起提交
+const beforeUpload = (file) => {
+  // 因为限制了单张封面，所以每次选择新图片直接覆盖旧的
+  fileList.value = [file]
+  return false // false 代表阻止 Ant Design Vue 的默认网络上传
 }
 
 // 保存草稿模拟
@@ -115,17 +114,60 @@ const saveDraft = () => {
   message.info('已保存到草稿箱')
 }
 
-// 提交发布逻辑
-const onSubmit = (values) => {
+// 核心：提交发布真实逻辑（直接写入数据库）
+const onSubmit = async (values) => {
   isSubmitting.value = true
-  console.log('提交的游记数据:', { ...values, cover: fileList.value })
 
-  // 模拟请求延迟
-  setTimeout(() => {
+  try {
+    // 1. 获取当前登录用户的 ID
+    const userInfoStr = localStorage.getItem('user_id')
+    if (!currentUserId) {
+      message.warning('请先登录后再发布游记哦！')
+      isSubmitting.value = false
+      return
+    }
+
+    if (fileList.value.length === 0) {
+      message.warning('请上传一张游记封面！')
+      isSubmitting.value = false
+      return
+    }
+
+    // 2. 组装发给后端的 FormData 数据
+    const formData = new FormData()
+    formData.append('type', 'guide') // 强制指定类型为游记
+    formData.append('title', values.title)
+    formData.append('userId', currentUserId)
+
+    // 如果游记表没有专门的 location 和 tags 字段，我们可以巧妙地把它们拼接到正文后面
+    let finalContent = values.content
+    if (values.location) {
+      finalContent += `<br/><br/>📍 <b>打卡地点：</b>${values.location}`
+    }
+    if (values.tags && values.tags.length > 0) {
+      finalContent += `<br/>🏷️ <b>游记标签：</b>${values.tags.join('、')}`
+    }
+    formData.append('content', finalContent)
+
+    // 3. 将之前拦截暂存的图片实体提取出来放进表单
+    // Ant Design Vue 的 file 对象真实文件藏在 originFileObj 属性里
+    const rawFile = fileList.value[0].originFileObj || fileList.value[0]
+    formData.append('imageFile', rawFile)
+
+    // 4. 调用后端接口直接入库
+    await createPostApi(formData)
+
+    message.success('🎉 游记发布成功！已直接入库。')
+
+    // 发布成功后清空表单并跳转回交流吧列表页 (路由名字根据您实际配置的调整)
+    router.push({ name: 'ForumList' })
+
+  } catch (error) {
+    console.error("游记发布失败:", error)
+    message.error('发布失败，请检查网络或联系管理员重试')
+  } finally {
     isSubmitting.value = false
-    message.success('🎉 游记发布成功！等待审核后即可展示。')
-    router.push({ name: 'Guide' }) // 假设跳转回游记列表页
-  }, 1500)
+  }
 }
 </script>
 

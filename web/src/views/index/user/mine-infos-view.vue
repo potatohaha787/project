@@ -14,39 +14,31 @@
       <div class="counts flex-view">
         <div class="fans-box flex-item" @click="clickMenu('collectThingView')">
           <div class="text">收藏</div>
-          <div class="num">{{collectCount}}</div>
+          <div class="num">{{ collectCount }}</div>
         </div>
         <div class="split-line">
         </div>
         <div class="follow-box flex-item" @click="clickMenu('wishThingView')">
           <div class="text">心愿单</div>
-          <div class="num">{{wishCount}}</div>
+          <div class="num">{{ wishCount }}</div>
         </div>
-<!--        <div class="split-line">-->
-<!--        </div>-->
-<!--        <div class="points-box flex-item">-->
-<!--          <div class="text">积分</div>-->
-<!--          <div class="num">0</div>-->
-<!--        </div>-->
       </div>
     </div>
+
     <div class="order-box">
-      <div class="title">订单中心</div>
+      <div class="title">内容管理</div>
       <div class="list">
-        <div class="mine-item flex-view" @click="clickMenu('orderView')">
-          <img :src="MyOrderImg">
-          <span>我的订单</span>
+        <div class="mine-item flex-view" @click="clickMenu('myPostView')">
+          <img :src="PostIconImg">
+          <span>我的游记</span>
         </div>
         <div class="mine-item flex-view" @click="clickMenu('commentView')">
           <img :src="CommentIconImg">
           <span>我的评论</span>
         </div>
-        <div class="mine-item flex-view" @click="clickMenu('scoreView')">
-          <img :src="PointIconImage">
-          <span>我的积分</span>
-        </div>
       </div>
     </div>
+
     <div class="setting-box">
       <div class="title">个人设置</div>
       <div class="list">
@@ -58,10 +50,6 @@
           <img :src="SafeIconImage" alt="账号安全">
           <span>账号安全</span>
         </div>
-        <div class="mine-item flex-view" @click="clickMenu('pushView')">
-          <img :src="PushIconImage" alt="推送设置">
-          <span>推送设置</span>
-        </div>
         <div class="mine-item flex-view" @click="clickMenu('messageView')">
           <img :src="MessageIconImage" alt="消息管理">
           <span>消息管理</span>
@@ -72,52 +60,53 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+
+// 导入图片 (移除了无用的图标，将原订单图标用作游记图标)
 import AvatarImg from '/@/assets/images/avatar.jpg'
-import MyOrderImg from '/@/assets/images/order-icon.svg'
+import PostIconImg from '/@/assets/images/order-icon.svg'
 import CommentIconImg from '/@/assets/images/order-thing-icon.svg'
-import AddressIconImage from '/@/assets/images/order-address-icon.svg'
-import PointIconImage from '/@/assets/images/order-point-icon.svg'
 import SettingIconImage from '/@/assets/images/setting-icon.svg'
 import SafeIconImage from '/@/assets/images/setting-safe-icon.svg'
-import PushIconImage from '/@/assets/images/setting-push-icon.svg'
 import MessageIconImage from '/@/assets/images/setting-msg-icon.svg'
 
-import {userCollectListApi} from '/@/api/thingCollect'
-import {userWishListApi} from '/@/api/thingWish'
-import {useUserStore} from '/@/store';
+import { userCollectListApi } from '/@/api/thingCollect'
+import { userWishListApi } from '/@/api/thingWish'
+import { useUserStore } from '/@/store';
+
 const userStore = useUserStore();
 const router = useRouter();
-
 
 let collectCount = ref(0)
 let wishCount = ref(0)
 
-onMounted(()=>{
+onMounted(() => {
   getCollectThingList()
   getWishThingList()
 })
 
-const clickMenu =(name)=> {
-  router.push({name: name})
+const clickMenu = (name: string) => {
+  router.push({ name: name })
 }
-const getCollectThingList =()=> {
+
+const getCollectThingList = () => {
   let userId = userStore.user_id
-  userCollectListApi({userId: userId}).then(res => {
+  userCollectListApi({ userId: userId }).then(res => {
     collectCount.value = res.data.length
   }).catch(err => {
     console.log(err.msg)
   })
 }
 
-const getWishThingList =()=> {
+const getWishThingList = () => {
   let userId = userStore.user_id
-  userWishListApi({userId: userId}).then(res => {
+  userWishListApi({ userId: userId }).then(res => {
     wishCount.value = res.data.length
   }).catch(err => {
     console.log(err.msg)
   })
 }
-
 </script>
 
 <style scoped lang="less">

@@ -118,11 +118,6 @@ const constantRouterMap = [
         component: () => import('/@/views/index/usercenter.vue'),
         children: [
           {
-            path: 'addressView',
-            name: 'addressView',
-            component: () => import('/@/views/index/user/address-view.vue')
-          },
-          {
             path: 'wishThingView',
             name: 'wishThingView',
             component: () => import('/@/views/index/user/wish-thing-view.vue')
@@ -133,15 +128,11 @@ const constantRouterMap = [
             component: () => import('/@/views/index/user/collect-thing-view.vue')
           },
           {
-            path: 'orderView',
-            name: 'orderView',
-            component: () => import('/@/views/index/user/order-view.vue')
+            path: 'myPostView',
+            name: 'myPostView',
+            component: () => import('/@/views/index/user/myPostView.vue')
           },
-          {
-            path: 'orderView',
-            name: 'orderView',
-            component: () => import('/@/views/index/user/order-view.vue')
-          },
+
           {
             path: 'userInfoEditView',
             name: 'userInfoEditView',
@@ -158,11 +149,6 @@ const constantRouterMap = [
             component: () => import('/@/views/index/user/fans-view.vue')
           },
           {
-            path: 'scoreView',
-            name: 'scoreView',
-            component: () => import('/@/views/index/user/score-view.vue')
-          },
-          {
             path: 'commentView',
             name: 'commentView',
             component: () => import('/@/views/index/user/comment-view.vue')
@@ -171,11 +157,6 @@ const constantRouterMap = [
             path: 'securityView',
             name: 'securityView',
             component: () => import('/@/views/index/user/security-view.vue')
-          },
-          {
-            path: 'pushView',
-            name: 'pushView',
-            component: () => import('/@/views/index/user/push-view.vue')
           },
           {
             path: 'messageView',

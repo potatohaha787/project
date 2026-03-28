@@ -160,9 +160,11 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
+import Header from '/@/views/index/components/header.vue'
+import Footer from '/@/views/index/components/footer.vue'
 // 引入刚刚写好的 API
 import { getPostListApi, createPostApi } from '/@/api/post'
-import { BASE_URL } from '/@/store/constants' // 如果您的图片路径需要拼接 BASE_URL
+import { BASE_URL } from '/@/store/constants'
 
 const router = useRouter()
 
@@ -244,8 +246,14 @@ const handlePublishSubmit = async () => {
   formData.append('type', publishForm.value.type)
   formData.append('title', publishForm.value.title)
   formData.append('content', publishForm.value.content)
-  // 假设用户登录了，应该传 userId，这里先写死 1 用于测试
-  formData.append('userId', '1')
+  const userInfoStr = localStorage.getItem('user_id')
+  if (!currentUserId) {
+    message.warning('请先登录后再发布哦！')
+    isPublishing.value = false
+    return
+  }
+
+  formData.append('userId', currentUserId)
 
   // 处理上传的图片文件 (取第一张作为封面)
   if (publishForm.value.images && publishForm.value.images.length > 0) {

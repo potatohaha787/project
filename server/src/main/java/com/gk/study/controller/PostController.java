@@ -25,12 +25,13 @@ public class PostController {
 
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public APIResponse list(@RequestParam(value = "type", required = false) String type,
-                            @RequestParam(value = "keyword", required = false) String keyword) {
+                            @RequestParam(value = "keyword", required = false) String keyword,
+                            @RequestParam(value = "userId", required = false) Long userId) { // 🌟 新增 userId 参数
         try {
-            List<Post> list = postService.getPostList(type, keyword);
+            // 🌟 传入 userId 给 Service 层
+            List<Post> list = postService.getPostList(type, keyword, userId);
             return new APIResponse(ResponeCode.SUCCESS, "查询成功", list);
         } catch (Exception e) {
-            // 🌟 如果报错了，打印在控制台，并返回 200 JSON 错误，防止被拦截为 CORS
             e.printStackTrace();
             return new APIResponse(ResponeCode.FAIL, "后端代码报错了: " + e.getMessage());
         }
