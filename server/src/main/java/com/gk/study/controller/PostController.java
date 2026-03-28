@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-@CrossOrigin // 允许跨域
 @RestController
 @RequestMapping("/post")
 public class PostController {
@@ -23,9 +22,7 @@ public class PostController {
 
     private final String UPLOAD_PATH = System.getProperty("user.dir") + "/upload/image/";
 
-    /**
-     * 获取帖子/游记列表
-     */
+
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public APIResponse list(@RequestParam(value = "type", required = false) String type,
                             @RequestParam(value = "keyword", required = false) String keyword) {
@@ -39,9 +36,6 @@ public class PostController {
         }
     }
 
-    /**
-     * 获取帖子详情
-     */
     @RequestMapping(value = "/detail", method = RequestMethod.GET)
     public APIResponse detail(@RequestParam("id") Long id) {
         try {
@@ -57,9 +51,6 @@ public class PostController {
         }
     }
 
-    /**
-     * 创建帖子/游记
-     */
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public APIResponse create(Post post) {
         try {
@@ -75,7 +66,32 @@ public class PostController {
         }
     }
 
-    // ... saveFile、update、delete 暂略 ...
+    @RequestMapping(value = "/update", method = RequestMethod.POST)
+    public APIResponse update(Post post) {
+        try {
+            // 如果上传了新图片，则替换封面
+            if (post.getImageFile() != null && !post.getImageFile().isEmpty()) {
+                String fileName = saveFile(post.getImageFile());
+                post.setCover(fileName);
+            }
+            postService.updateById(post); // 注意：取决于你 Service 的写法，如果是 MyBatis-Plus 通常是 updateById
+            return new APIResponse(ResponeCode.SUCCESS, "更新成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new APIResponse(ResponeCode.FAIL, "更新报错: " + e.getMessage());
+        }
+    }
+
+    @RequestMapping(value = "/delete", method = RequestMethod.GET)
+    public APIResponse delete(@RequestParam("id") Long id) {
+        try {
+            postService.deletePost(id); // 使用你在 PostServiceImpl 中实现的方法
+            return new APIResponse(ResponeCode.SUCCESS, "删除成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new APIResponse(ResponeCode.FAIL, "删除报错: " + e.getMessage());
+        }
+    }
 
     private String saveFile(MultipartFile file) throws IOException {
         File dir = new File(UPLOAD_PATH);

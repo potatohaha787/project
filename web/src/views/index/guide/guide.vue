@@ -139,32 +139,41 @@ const router = useRouter()
 
 // --- 基础状态 ---
 const searchQuery = ref('')
+
+// 点击搜索或回车时触发
 const onSearch = () => {
-  console.log("搜索:", searchQuery.value)
-  // TODO: 对接后台搜索接口
+  console.log("执行搜索，关键词:", searchQuery.value)
+  // 重新调用获取数据的方法，并把搜索词传进去
+  fetchCommunityData(searchQuery.value)
 }
 
 // 响应式数据：游记与热门讨论
 const guideList = ref([])
 const forumList = ref([])
 
-// 🌟 核心：从后端获取数据
-const fetchCommunityData = async () => {
+
+
+// 🌟 核心：从后端获取数据 (新增 keyword 参数)
+const fetchCommunityData = async (keyword = '') => {
   try {
-    // 1. 获取所有帖子数据
-    const res = await getPostListApi()
+    // 1. 组装请求参数
+    const params = {}
+    if (keyword.trim() !== '') {
+      params.keyword = keyword.trim()
+    }
+
+    // 2. 将 params 传给后台接口，获取过滤后的帖子数据
+    const res = await getPostListApi(params)
     const allPosts = res.data || []
 
-    // 2. 筛选出 "游记" 类型的数据 (左侧展示)
+    // 3. 筛选出 "游记" 类型的数据 (左侧展示)
     guideList.value = allPosts
       .filter(item => item.type === 'guide')
       .map(item => ({
         id: item.id,
         title: item.title,
-        // 去除 HTML 标签提取纯文本作为摘要
         brief: item.content ? item.content.replace(/<[^>]+>/g, '').substring(0, 60) + '...' : '暂无简介',
-        // 拼接真实图片路径
-        cover: item.cover ? (BASE_URL + '/api/upload/image/' + item.cover) : ImgTourism,
+        cover: item.cover ? (BASE_URL + '/api/staticfiles/image/' + item.cover) : ImgTourism,
         location: item.location || '中山市',
         author: item.authorName || '香山体验师',
         avatar: item.authorAvatar || 'https://joeschmoe.io/api/v1/random',
@@ -172,19 +181,17 @@ const fetchCommunityData = async () => {
         likes: item.likeCount || 0
       }))
 
-    // 3. 筛选出 "非游记" 类型的数据 (右侧热门讨论，取前 5 条)
+    // 4. 筛选出 "非游记" 类型的数据 (右侧热门讨论)
     forumList.value = allPosts
       .filter(item => item.type !== 'guide')
-      .slice(0, 5) // 截取最新的 5 条
+      .slice(0, 5)
       .map(item => ({
         id: item.id,
         type: item.type === 'ask' ? 'tag-ask' : (item.type === 'share' ? 'tag-share' : 'tag-mate'),
         tag: item.type === 'ask' ? '求助' : (item.type === 'share' ? '分享' : '结伴'),
         title: item.title,
-        // 提取简短的内容预览
         desc: item.content ? item.content.replace(/<[^>]+>/g, '').substring(0, 30) + '...' : '',
-        replies: item.likeCount || 0, // 暂时用点赞数代替回复数占位
-        // 格式化时间戳
+        replies: item.likeCount || 0,
         time: new Date(Number(item.createTime)).toLocaleDateString()
       }))
 
@@ -200,13 +207,13 @@ onMounted(() => {
 
 // --- 跳转逻辑 ---
 const goToGuideDetail = (id) => {
-  // 假设您的游记详情页路由配置名为 travelogueDetail 或者直接用 path
-  router.push({ path: '/guide-detail', query: { id: id } })
+  // 使用定义在 root.ts 中的路由 name 进行跳转
+  router.push({ name: 'GuideDetail', query: { id: id } })
 }
 
 const goToForumDetail = (id) => {
   // 跳转到我们之前设计的社区交流详情页
-  router.push({ path: '/forum-detail', query: { id: id } })
+  router.push({ name: 'ForumDetail', query: { id: id } })
 }
 
 const goToPublish1 = () => {

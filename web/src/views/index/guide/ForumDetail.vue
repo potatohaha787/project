@@ -98,7 +98,8 @@
               <h3><i class="iconfont icon-hot"></i> 热门讨论</h3>
             </div>
             <div class="hot-topics-list">
-              <div class="hot-topic-item" v-for="(hotTopic, index) in relatedTopics" :key="hotTopic.id">
+              <div class="hot-topic-item" v-for="(hotTopic, index) in relatedTopics" :key="hotTopic.id"
+                @click="goToDetail(hotTopic.id)">
                 <div class="topic-ranking" :class="'rank-' + (index + 1)">{{ index + 1 }}</div>
                 <div class="topic-info">
                   <h4 class="hot-topic-title">{{ hotTopic.title }}</h4>
@@ -132,66 +133,138 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
 import { message } from 'ant-design-vue'
-import { getPostDetailApi } from '/@/api/post'
+import { getPostDetailApi, getPostListApi } from '/@/api/post'
 import { BASE_URL } from '/@/store/constants'
 
 const route = useRoute()
+const router = useRouter()
 
-// 存放真实的详情数据
-const article = ref({
+// 1. 对应模板的帖子详情数据
+const topicDetail = ref({
+  type: '',
+  tag: '加载中...',
   title: '加载中...',
-  cover: '',
-  location: '',
+  avatar: 'https://joeschmoe.io/api/v1/random',
+  author: '...',
   time: '',
   views: 0,
   likes: 0,
-  author: '...',
-  authorAvatar: '',
-  content: '',
-  tags: []
+  content: ''
 })
+
+// 2. 对应模板的评论和交互状态
+const replyList = ref([])
+const replyValue = ref('')
+const isSubmitting = ref(false)
+const relatedTopics = ref([])
+
+// 返回上一页
+const goBack = () => {
+  router.back()
+}
+
+const goToDetail = (id) => {
+  router.push({ name: 'ForumDetail', query: { id: id } })
+}
 
 // 核心：根据 ID 从数据库获取详情
 const fetchDetail = async (id) => {
   try {
     const res = await getPostDetailApi({ id: id })
-    if (res.data) {
+    if (res.code === 200 && res.data) {
       const data = res.data
-      article.value = {
+
+      // 处理标签样式
+      let typeClass = 'tag-share'
+      let tagText = '分享'
+      if (data.type === 'ask') { typeClass = 'tag-ask'; tagText = '求助' }
+      if (data.type === 'mate') { typeClass = 'tag-mate'; tagText = '结伴' }
+
+      topicDetail.value = {
+        type: typeClass,
+        tag: tagText,
         title: data.title,
-        // 拼接完整的图片 URL 路径
-        cover: data.cover ? (BASE_URL + '/api/upload/image/' + data.cover) : 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?q=80&w=2069&auto=format&fit=crop',
-        location: data.location || '中山市',
-        // 格式化时间戳
-        time: new Date(Number(data.createTime)).toLocaleString(),
+        avatar: data.authorAvatar || 'https://joeschmoe.io/api/v1/random',
+        author: data.authorName || '香山体验师',
+        time: data.createTime || '刚刚',
         views: data.pv || 0,
         likes: data.likeCount || 0,
-        author: data.authorName || '香山体验师',
-        authorAvatar: data.authorAvatar || 'https://joeschmoe.io/api/v1/random',
-        content: data.content,
-        // 如果后端传了标签数组就用，否则给个默认的
-        tags: data.tags || ['香山探索']
+        content: data.content || '<p>暂无内容</p>'
       }
+    } else {
+      message.error(res.msg || '获取详情失败')
     }
   } catch (error) {
-    message.error('获取详情失败')
+    console.error(error)
+    message.error('获取详情异常')
+  }
+}
+
+// 获取右侧热门讨论列表
+const fetchRelatedTopics = async () => {
+  try {
+    const res = await getPostListApi()
+    if (res.code === 200 && res.data) {
+      // 过滤掉当前帖子和游记，只取前5个
+      relatedTopics.value = res.data
+        .filter(item => item.type !== 'guide' && String(item.id) !== String(route.query.id))
+        .slice(0, 5)
+        .map(item => {
+          let typeClass = 'tag-share'
+          let tagText = '分享'
+          if (item.type === 'ask') { typeClass = 'tag-ask'; tagText = '求助' }
+          if (item.type === 'mate') { typeClass = 'tag-mate'; tagText = '结伴' }
+          return {
+            id: item.id,
+            title: item.title,
+            type: typeClass,
+            tag: tagText,
+            replies: item.likeCount || 0
+          }
+        })
+    }
+  } catch (error) {
+    console.error(error)
   }
 }
 
 // 页面加载时执行
-onMounted(() => {
-  const id = route.query.id // 接收上个页面传过来的 id
+// --- 新增/修改的代码开始 ---
+
+// 1. 将获取数据的逻辑封装成一个通用方法
+const loadPageData = () => {
+  const id = route.query.id
   if (id) {
     fetchDetail(id)
+    fetchRelatedTopics()
+    // 切换帖子后，平滑滚动回页面顶部
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   } else {
-    message.warning('参数错误：缺少文章ID')
+    message.warning('参数错误：缺少帖子ID')
   }
+}
+
+// 2. 页面初次挂载时执行
+onMounted(() => {
+  loadPageData()
 })
+
+// 3. 监听路由 id 的变化。当在当前页面点击右侧列表时，触发数据刷新
+watch(
+  () => route.query.id,
+  (newId, oldId) => {
+    // 确保有新 id，且确实发生了改变，同时当前仍在 ForumDetail 页面
+    if (newId && newId !== oldId && route.name === 'ForumDetail') {
+      loadPageData()
+    }
+  }
+)
+// --- 新增/修改的代码结束 ---
 
 // 提交回复
 const handleSubmitReply = () => {
@@ -203,7 +276,6 @@ const handleSubmitReply = () => {
 
   // 模拟提交过程
   setTimeout(() => {
-    // 将新回复添加到列表顶部
     replyList.value.unshift({
       id: Date.now(),
       avatar: 'https://joeschmoe.io/api/v1/random',
@@ -216,7 +288,7 @@ const handleSubmitReply = () => {
     replyValue.value = ''
     isSubmitting.value = false
     message.success('回复发表成功！')
-  }, 1000)
+  }, 800)
 }
 </script>
 

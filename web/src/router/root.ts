@@ -207,6 +207,7 @@ const constantRouterMap = [
       { path: 'adminHeritage', name: 'adminHeritage', component: () => import('/@/views/admin/adminHeritage.vue') },
       { path: 'adminFood', name: 'adminFood', component: () => import('/@/views/admin/adminFood.vue') },
       { path: 'ad', name: 'ad', component: () => import('/@/views/admin/ad.vue') },
+      { path: 'adminPost', name: 'adminPost', component: () => import('/@/views/admin/adminPost.vue') },
       { path: 'notice', name: 'notice', component: () => import('/@/views/admin/notice.vue') },
       { path: 'loginLog', name: 'loginLog', component: () => import('/@/views/admin/login-log.vue') },
       { path: 'opLog', name: 'opLog', component: () => import('/@/views/admin/op-log.vue') },

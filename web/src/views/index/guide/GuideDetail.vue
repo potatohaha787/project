@@ -83,25 +83,6 @@
 
         <a-col :xs="24" :lg="7">
           <div class="sidebar-wrapper">
-
-            <div class="author-card">
-              <div class="author-bg"></div>
-              <div class="author-info">
-                <a-avatar :src="article.authorAvatar" :size="72" class="author-avatar" />
-                <h3 class="author-name">{{ article.author }}</h3>
-                <p class="author-desc">{{ article.authorDesc }}</p>
-                <div class="author-stats">
-                  <div class="stat"><span class="num">12</span><span class="label">游记</span></div>
-                  <div class="stat"><span class="num">3.4k</span><span class="label">获赞</span></div>
-                  <div class="stat"><span class="num">890</span><span class="label">粉丝</span></div>
-                </div>
-                <a-button type="primary" block size="large" class="follow-btn" :class="{ followed: isFollowed }"
-                  @click="isFollowed = !isFollowed">
-                  {{ isFollowed ? '已关注' : '+ 关注作者' }}
-                </a-button>
-              </div>
-            </div>
-
             <div class="related-card">
               <h3 class="sidebar-title">更多香山探索</h3>
               <div class="related-list">
@@ -128,10 +109,18 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
 import { message } from 'ant-design-vue'
+
+// 引入真实的 API 和 全局常量
+import { getPostDetailApi, getPostListApi } from '/@/api/post'
+import { BASE_URL } from "/@/store/constants"
+
+const route = useRoute()
+const router = useRouter()
 
 // 交互状态
 const isLiked = ref(false)
@@ -140,53 +129,111 @@ const isFollowed = ref(false)
 const isSubmitting = ref(false)
 const commentText = ref('')
 
-// 切换喜欢/收藏
-const toggleLike = () => { isLiked.value = !isLiked.value; if (isLiked.value) message.success('点赞成功！') }
-const toggleCollect = () => { isCollected.value = !isCollected.value; if (isCollected.value) message.success('已加入收藏夹！') }
-
-// 模拟游记详细数据
+// 定义游记详细数据（先给一个空结构防止模板渲染报错）
 const article = ref({
-  title: '周末逃离城市计划：沉醉在崖口村的金色稻浪与绝美日落',
-  cover: 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?q=80&w=2069&auto=format&fit=crop', // 替换为您本地的高清宽图
-  location: '南朗崖口村',
-  time: '2023-10-24 14:30',
-  views: '3.4w',
-  likes: 1280,
-  author: '旅行体验师_阿杰',
-  authorAvatar: 'https://joeschmoe.io/api/v1/jess',
-  authorDesc: '走遍大江南北，偏爱岭南烟火。中山土著，带你玩转地道香山。',
-  tags: ['周末游', '摄影打卡', '海边日落', '小众秘境'],
-  content: `
-    <p class="lead-text">如果你问我中山秋天最美的地方在哪里，我会毫不犹豫地告诉你：去崖口吧。</p>
-    <p>不想走远，就在中山周边寻一处清静。南朗崖口村，一个背靠五桂山、面向珠江口的小渔村，藏着中山最迷人的金色稻浪和最温柔的海边日落。</p>
-    <h3>📍 第一站：千亩稻田，宫崎骏的夏天</h3>
-    <p>下午三点左右到达崖口，这时候的光线已经开始变得柔和。租一辆小电驴或者自行车，穿梭在平整的村道上，两旁是金灿灿的稻田，微风吹过，稻浪翻滚，仿佛直接闯入了宫崎骏的动画世界。</p>
-    <img src="https://images.unsplash.com/photo-1589148413645-8c7e0bde224a?q=80&w=1000&auto=format&fit=crop" alt="稻田" />
-    <span class="img-caption">微风拂过金色的稻浪，是秋天最美的馈赠</span>
-    <p><strong>拍照小Tips：</strong>建议穿浅色系（白色、米色）或者碎花裙，和金色的稻田形成反差，特别出片。走到田埂中间的小路上，用长焦镜头压缩背景，氛围感拉满！</p>
-    
-    <h3>📍 第二站：崖口海鲜街与绝美日落</h3>
-    <p>逛完稻田，差不多五点半，直接前往海边。崖口的海滩虽然没有白沙，但长长的海岸堤坝和错落的渔船，别有一番渔村风情。</p>
-    <p>找一家靠海的煲仔饭店，点上一份招牌的“崖口煲仔饭”和几盘刚刚打捞上来的小海鲜。当夕阳的余晖将整个海面染成橘红色时，吃着热腾腾的煲仔饭，吹着海风，所有的班味都在这一刻烟消云散。</p>
-    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000&auto=format&fit=crop" alt="海边日落" />
-    
-    <h3>💡 实用攻略信息</h3>
-    <ul>
-      <li><strong>🚗 交通：</strong>自驾导航至“南朗崖口村”，村内有停车场。如果是公共交通，可以坐城轨到“南朗站”，再打车前往。</li>
-      <li><strong>⏰ 最佳时间：</strong>看稻田建议10月下旬到11月中旬；看日落一定要提前查好天气，晴天的傍晚最美。</li>
-      <li><strong>🍜 美食推荐：</strong>崖口云吞、海鲜煲仔饭、崖口特色咸茶。</li>
-    </ul>
-    <p>不需要太多的计划，在一个周末的午后，去崖口吹吹风吧，中山的慢生活，都在这片海与田之间了。</p>
-  `
+  id: '',
+  title: '',
+  cover: '',
+  location: '',
+  time: '',
+  views: 0,
+  likes: 0,
+  author: '',
+  authorAvatar: '',
+  authorDesc: '',
+  tags: [],
+  content: ''
 })
 
-// 模拟评论
-const comments = ref([
-  { id: 1, author: '广州周末游', avatar: 'https://joeschmoe.io/api/v1/jon', time: '2天前', content: '被博主种草了！请问这个时候去稻子收割了吗？准备这周末带娃过去。', likes: 12 },
-  { id: 2, author: '贪吃的小胖', avatar: 'https://joeschmoe.io/api/v1/jia', time: '1天前', content: '崖口煲仔饭是真的绝！特别是那个黄鳝煲仔饭，加上锅巴，一口下去太满足了！', likes: 8 }
-])
+const comments = ref([]) // 如果你有评论接口，可仿照游记逻辑请求，此处先置空或保留你的模拟数据
+const relatedArticles = ref([]) // 相关游记列表
 
-// 发表评论
+// 1. 获取游记详情数据
+const loadArticleDetail = () => {
+  const id = route.query.id
+  if (!id) {
+    message.error('参数错误：缺少游记ID')
+    return
+  }
+
+  getPostDetailApi({ id: id }).then((res) => {
+    if (res.code === 200) {
+      let data = res.data
+
+      // 处理封面图路径
+      let coverUrl = data.cover || ''
+      if (coverUrl && !coverUrl.startsWith('http')) {
+        coverUrl = BASE_URL + '/api/staticfiles/image/' + coverUrl
+      }
+
+      // 处理作者头像路径
+      let avatarUrl = data.authorAvatar || ''
+      if (avatarUrl && !avatarUrl.startsWith('http')) {
+        avatarUrl = BASE_URL + '/api/staticfiles/avatar/' + avatarUrl
+      }
+
+      // 将数据库字段映射到前端所需的数据结构
+      article.value = {
+        id: data.id,
+        title: data.title,
+        cover: coverUrl,
+        location: data.location || '未知地点',
+        time: data.createTime,
+        views: data.pv || 0,                 // 数据库的 pv 映射为 views
+        likes: data.likeCount || 0,          // 数据库的 likeCount 映射为 likes
+        author: data.authorName || '匿名用户',
+        authorAvatar: avatarUrl || 'https://joeschmoe.io/api/v1/random', // 默认头像
+        authorDesc: '该用户很懒，什么都没写~',
+        tags: data.tags || [],
+        content: data.content || '<p>暂无内容</p>'
+      }
+    } else {
+      message.error(res.msg || '获取游记详情失败')
+    }
+  }).catch((err) => {
+    console.error('获取详情异常', err)
+  })
+}
+
+// 2. 获取右侧“相关游记”推荐 (调用列表接口获取几条 guide 数据)
+const loadRelatedArticles = () => {
+  // 请求游记类型的数据，并在前端截取前3个作为推荐
+  getPostListApi({ type: 'guide' }).then((res) => {
+    if (res.code === 200) {
+      let list = res.data || []
+      // 过滤掉当前正在看的这篇，并取前 3 篇
+      list = list.filter(item => String(item.id) !== String(route.query.id)).slice(0, 3)
+
+      relatedArticles.value = list.map(item => {
+        let coverUrl = item.cover || ''
+        if (coverUrl && !coverUrl.startsWith('http')) {
+          coverUrl = BASE_URL + '/api/staticfiles/image/' + coverUrl
+        }
+        return {
+          id: item.id,
+          title: item.title,
+          views: item.pv || 0,
+          cover: coverUrl
+        }
+      })
+    }
+  })
+}
+
+// 切换喜欢/收藏
+const toggleLike = () => {
+  isLiked.value = !isLiked.value;
+  if (isLiked.value) message.success('点赞成功！')
+  // TODO: 后期可以调用点赞后端的 API
+}
+
+const toggleCollect = () => {
+  isCollected.value = !isCollected.value;
+  if (isCollected.value) message.success('已加入收藏夹！')
+  // TODO: 后期可以调用收藏后端的 API
+}
+
+// 发表评论（模拟交互）
 const submitComment = () => {
   if (!commentText.value.trim()) { message.warning('写点什么再发表吧~'); return }
   isSubmitting.value = true
@@ -202,15 +249,15 @@ const submitComment = () => {
     commentText.value = ''
     isSubmitting.value = false
     message.success('留言成功！')
+    // TODO: 后期替换为真实的提交评论 API
   }, 800)
 }
 
-// 模拟相关推荐
-const relatedArticles = ref([
-  { id: 1, title: '重走伟人故里，翠亨村的一日人文漫步', views: '1.2w', cover: 'https://images.unsplash.com/photo-1543083652-32a76f2fc700?q=80&w=300&auto=format&fit=crop' },
-  { id: 2, title: '本地土著吐血整理：石岐老街地道美食地图', views: '8900', cover: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=300&auto=format&fit=crop' },
-  { id: 3, title: '紫马岭公园秋日赏花指南，周末野餐好去处', views: '5420', cover: 'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?q=80&w=300&auto=format&fit=crop' }
-])
+// 页面挂载时请求数据
+onMounted(() => {
+  loadArticleDetail()
+  loadRelatedArticles()
+})
 </script>
 
 <style scoped lang="less">
@@ -593,93 +640,6 @@ const relatedArticles = ref([
   position: sticky;
   top: 100px;
   /* 悬浮侧边栏，页面滚动时保持在视口内 */
-}
-
-/* 作者名片 */
-.author-card {
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-  margin-bottom: 24px;
-  text-align: center;
-
-  .author-bg {
-    height: 80px;
-    background: linear-gradient(135deg, @zs-green 0%, darken(@zs-green, 10%) 100%);
-  }
-
-  .author-info {
-    padding: 0 24px 24px;
-
-    .author-avatar {
-      border: 4px solid #fff;
-      margin-top: -36px;
-      margin-bottom: 12px;
-      background: #fff;
-    }
-
-    .author-name {
-      font-size: 18px;
-      font-weight: bold;
-      color: @dark-text;
-      margin-bottom: 8px;
-    }
-
-    .author-desc {
-      font-size: 13px;
-      color: @light-text;
-      line-height: 1.6;
-      margin-bottom: 20px;
-    }
-
-    .author-stats {
-      display: flex;
-      justify-content: center;
-      gap: 24px;
-      margin-bottom: 24px;
-      padding-bottom: 24px;
-      border-bottom: 1px solid #f1f5f9;
-
-      .stat {
-        display: flex;
-        flex-direction: column;
-
-        .num {
-          font-size: 16px;
-          font-weight: bold;
-          color: @dark-text;
-        }
-
-        .label {
-          font-size: 12px;
-          color: #94a3b8;
-          margin-top: 4px;
-        }
-      }
-    }
-
-    .follow-btn {
-      background: @zs-yellow;
-      border-color: @zs-yellow;
-      font-weight: bold;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
-
-      &:hover {
-        background: lighten(@zs-yellow, 5%);
-        border-color: lighten(@zs-yellow, 5%);
-        transform: translateY(-1px);
-      }
-
-      &.followed {
-        background: #f1f5f9;
-        border-color: #f1f5f9;
-        color: @light-text;
-        box-shadow: none;
-      }
-    }
-  }
 }
 
 /* 相关游记 */

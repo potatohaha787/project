@@ -54,9 +54,23 @@ public class AccessInterceptor extends HandlerInterceptorAdapter {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
 
-        // 🌟🌟🌟 新增的核心代码：遇到 OPTIONS 预检请求直接放行，防止跨域报错拦截！
+        // 🌟🌟🌟 终极跨域修复：针对 OPTIONS 预检请求，动态回写允许的头信息，并直接返回 200 OK
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            return true;
+            response.setStatus(HttpServletResponse.SC_OK);
+
+            // 动态获取前端的 Origin 域名
+            String origin = request.getHeader("Origin");
+            response.setHeader("Access-Control-Allow-Origin", origin != null ? origin : "*");
+
+            // 【关键修复点】：动态获取前端本次请求想要携带的自定义头（如 ADMINTOKEN），并原样允许
+            String requestHeaders = request.getHeader("Access-Control-Request-Headers");
+            response.setHeader("Access-Control-Allow-Headers", requestHeaders != null ? requestHeaders : "Content-Type, ADMINTOKEN, TOKEN");
+
+            response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+            response.setHeader("Access-Control-Max-Age", "3600"); // 缓存预检结果，减少网络请求
+
+            return false; // 直接阻断继续往后走，避免触发没有 OPTIONS 映射的 405 错误
         }
 
         request.setAttribute("_startTime", System.currentTimeMillis());
@@ -101,6 +115,7 @@ public class AccessInterceptor extends HandlerInterceptorAdapter {
             }
         }
 
+
         return true;
     }
 
@@ -125,11 +140,7 @@ public class AccessInterceptor extends HandlerInterceptorAdapter {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         opLog.setReTime(formatter.format(new Date()));
         opLog.setAccessTime(String.valueOf(diff));
-
-        // 确保不会因为 service 为 null 而报错掩盖跨域问题
-        if (service != null) {
-            service.createOpLog(opLog);
-        }
+        service.createOpLog(opLog);
     }
 
     public void writeResponse(HttpServletResponse response, APIResponse apiResponse) throws IOException {

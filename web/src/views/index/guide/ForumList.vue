@@ -225,7 +225,7 @@ const switchTab = (key) => {
 
 // 跳转到详情页 (将真实 ID 传过去)
 const goToDetail = (id) => {
-  router.push({ path: '/forum-detail', query: { id: id } })
+  router.push({ name: 'ForumDetail', query: { id: id } })
 }
 
 // --- 以下为：发布弹窗逻辑改造 ---

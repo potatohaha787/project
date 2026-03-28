@@ -55,6 +55,11 @@
             <span>用户管理</span>
           </a-menu-item>
 
+          <a-menu-item key="adminPost">
+            <file-text-outlined />
+            <span>游记与社区</span>
+          </a-menu-item>
+
           <a-sub-menu>
             <template #icon>
               <folder-outlined />
@@ -119,6 +124,7 @@ import {
   DollarOutlined,
   LayoutOutlined,
   DatabaseOutlined,
+  FileTextOutlined
 } from '@ant-design/icons-vue';
 
 import { ref } from 'vue';
