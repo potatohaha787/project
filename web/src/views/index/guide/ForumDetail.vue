@@ -63,7 +63,11 @@
                     </template>
                     <template #actions>
                       <span key="comment-basic-reply-to" class="action-item">回复</span>
-                      <span key="comment-basic-like" class="action-item">👍 {{ item.likes }}</span>
+                      <span key="comment-basic-like" class="action-item"
+                        :style="{ color: item.hasLiked ? '#d97706' : '', fontWeight: item.hasLiked ? 'bold' : 'normal' }"
+                        @click="handleLikeComment(item)">
+                        {{ item.hasLiked ? '已赞' : '👍' }} {{ item.likes }}
+                      </span>
                     </template>
                   </a-comment>
                 </a-list-item>
@@ -139,15 +143,18 @@ import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
 import { message } from 'ant-design-vue'
 import { getPostDetailApi, getPostListApi } from '/@/api/post'
-import { BASE_URL } from '/@/store/constants'
 
-// 🌟 1. 引入评论的真实 API
-import { createApi, listThingCommentsApi } from '/@/api/comment'
+import {
+  createPostCommentApi,
+  listPostCommentsApi,
+  likePostCommentApi,
+  cancelLikePostCommentApi
+} from '/@/api/comment'
 
 const route = useRoute()
 const router = useRouter()
 
-// 1. 对应模板的帖子详情数据
+// 就是因为刚才弄丢了这个 topicDetail 对象，才导致了你的白屏！
 const topicDetail = ref({
   type: '',
   tag: '加载中...',
@@ -160,22 +167,15 @@ const topicDetail = ref({
   content: ''
 })
 
-// 2. 对应模板的评论和交互状态
 const replyList = ref([])
 const replyValue = ref('')
 const isSubmitting = ref(false)
 const relatedTopics = ref([])
 
-// 返回上一页
-const goBack = () => {
-  router.back()
-}
+const goBack = () => { router.back() }
+const goToDetail = (id) => { router.push({ name: 'ForumDetail', query: { id: id } }) }
 
-const goToDetail = (id) => {
-  router.push({ name: 'ForumDetail', query: { id: id } })
-}
-
-// 根据 ID 从数据库获取详情
+// 获取详情
 const fetchDetail = async (id) => {
   try {
     const res = await getPostDetailApi({ id: id })
@@ -191,34 +191,36 @@ const fetchDetail = async (id) => {
         tag: tagText,
         title: data.title,
         avatar: data.authorAvatar || 'https://joeschmoe.io/api/v1/random',
-        author: data.authorName || '香山体验师',
+        // ✅ 核心修复：优先取昵称 -> 用户名 -> 用户ID -> 匿名用户
+        author: data.nickname || data.username || data.authorName || (data.userId ? `用户ID: ${data.userId}` : '匿名用户'),
         time: data.createTime || '刚刚',
         views: data.pv || 0,
         likes: data.likeCount || 0,
         content: data.content || '<p>暂无内容</p>'
       }
-    } else {
-      message.error(res.msg || '获取详情失败')
     }
   } catch (error) {
     console.error(error)
-    message.error('获取详情异常')
   }
 }
 
-// 🌟 2. 新增：从数据库获取当前游记的真实评论列表
+// 获取评论
 const fetchComments = async (id) => {
   try {
-    // 借用 thingId 来存放游记/帖子的 ID
-    const res = await listThingCommentsApi({ thingId: id, order: 'recent' })
+    const res = await listPostCommentsApi({ postId: id })
     if (res.code === 200) {
+      const currentUserId = localStorage.getItem('user_id') || 'guest'
+      const likedRecords = JSON.parse(localStorage.getItem(`liked_comments_${currentUserId}`) || '[]')
+
       replyList.value = res.data.map(item => ({
         id: item.id,
-        avatar: 'https://joeschmoe.io/api/v1/random', // 如果后端评论实体有头像可以用 item.avatar
-        author: item.username || '热心网友',
+        avatar: 'https://joeschmoe.io/api/v1/random',
+        // ✅ 核心修复：评论列表同样也是优先取昵称 -> 用户名 -> 用户ID
+        author: item.nickname || item.username || (item.userId ? `用户ID: ${item.userId}` : '热心网友'),
         time: item.commentTime || '刚刚',
         content: item.content,
-        likes: item.likeCount || 0
+        likes: item.likeCount || 0,
+        hasLiked: likedRecords.includes(item.id)
       }))
     }
   } catch (error) {
@@ -226,7 +228,36 @@ const fetchComments = async (id) => {
   }
 }
 
-// 获取右侧热门讨论列表
+// 处理评论点赞
+const handleLikeComment = async (comment) => {
+  const currentUserId = localStorage.getItem('user_id') || 'guest'
+  const likeRecordKey = `liked_comments_${currentUserId}`
+  let likedRecords = JSON.parse(localStorage.getItem(likeRecordKey) || '[]')
+
+  if (comment.hasLiked) {
+    try {
+      const res = await cancelLikePostCommentApi({ id: comment.id })
+      if (res.code === 200) {
+        comment.likes -= 1
+        comment.hasLiked = false
+        likedRecords = likedRecords.filter(id => id !== comment.id)
+        localStorage.setItem(likeRecordKey, JSON.stringify(likedRecords))
+      }
+    } catch (error) { console.error(error) }
+  } else {
+    try {
+      const res = await likePostCommentApi({ id: comment.id })
+      if (res.code === 200) {
+        comment.likes += 1
+        comment.hasLiked = true
+        likedRecords.push(comment.id)
+        localStorage.setItem(likeRecordKey, JSON.stringify(likedRecords))
+      }
+    } catch (error) { console.error(error) }
+  }
+}
+
+// 获取右侧推荐
 const fetchRelatedTopics = async () => {
   try {
     const res = await getPostListApi()
@@ -239,13 +270,7 @@ const fetchRelatedTopics = async () => {
           let tagText = '分享'
           if (item.type === 'ask') { typeClass = 'tag-ask'; tagText = '求助' }
           if (item.type === 'mate') { typeClass = 'tag-mate'; tagText = '结伴' }
-          return {
-            id: item.id,
-            title: item.title,
-            type: typeClass,
-            tag: tagText,
-            replies: item.likeCount || 0
-          }
+          return { id: item.id, title: item.title, type: typeClass, tag: tagText, replies: item.likeCount || 0 }
         })
     }
   } catch (error) {
@@ -253,60 +278,42 @@ const fetchRelatedTopics = async () => {
   }
 }
 
-// 通用页面加载逻辑
 const loadPageData = () => {
   const id = route.query.id
   if (id) {
     fetchDetail(id)
     fetchRelatedTopics()
-    fetchComments(id) // 🌟 3. 页面加载时拉取真实评论
+    fetchComments(id)
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  } else {
-    message.warning('参数错误：缺少帖子ID')
   }
 }
 
-onMounted(() => {
-  loadPageData()
+onMounted(() => { loadPageData() })
+
+watch(() => route.query.id, (newId, oldId) => {
+  if (newId && newId !== oldId && route.name === 'ForumDetail') { loadPageData() }
 })
 
-watch(
-  () => route.query.id,
-  (newId, oldId) => {
-    if (newId && newId !== oldId && route.name === 'ForumDetail') {
-      loadPageData()
-    }
-  }
-)
-
-// 🌟 4. 彻底重写：将真实数据提交到后端数据库
 const handleSubmitReply = async () => {
   if (!replyValue.value.trim()) {
     message.warning('请输入回复内容')
     return
   }
-
-  // 必须登录才能评论
   const currentUserId = localStorage.getItem('user_id')
   if (!currentUserId) {
     message.warning('请先登录后再回复哦！')
     return
   }
-
   isSubmitting.value = true
-
-  // 组装表单数据发送给后端
-  const formData = new FormData()
-  formData.append('content', replyValue.value.trim())
-  formData.append('thingId', route.query.id) // 把游记ID存入 thingId 字段关联起来
-  formData.append('userId', currentUserId)
-
+  const requestParams = new URLSearchParams()
+  requestParams.append('content', replyValue.value.trim())
+  requestParams.append('postId', route.query.id)
+  requestParams.append('userId', currentUserId)
   try {
-    const res = await createApi(formData)
+    const res = await createPostCommentApi(requestParams)
     if (res.code === 200) {
       message.success('回复发表成功！')
       replyValue.value = ''
-      // 🌟 提交成功后，重新拉取一次评论列表刷新页面
       fetchComments(route.query.id)
     } else {
       message.error(res.msg || '回复失败')
@@ -404,7 +411,6 @@ const handleSubmitReply = async () => {
 
       .highlight-dot {
         color: @zs-yellow;
-        /* 使用琥珀黄作为点缀 */
       }
     }
   }
@@ -447,7 +453,6 @@ const handleSubmitReply = async () => {
 
         &:hover {
           color: #ef4444;
-          /* 点赞悬浮红色 */
           background-color: transparent;
         }
       }
@@ -487,7 +492,6 @@ const handleSubmitReply = async () => {
   }
 }
 
-/* 覆盖 Antd Reply List 和 Comment 样式 */
 :deep(.ant-list-item) {
   padding: 16px 0;
   border-bottom: 1px solid #f1f5f9;
@@ -641,7 +645,6 @@ const handleSubmitReply = async () => {
     font-size: 12px;
     font-weight: bold;
 
-    /* 热门排名前三的高亮 */
     &.rank-1 {
       background: @zs-yellow;
       color: #fff;

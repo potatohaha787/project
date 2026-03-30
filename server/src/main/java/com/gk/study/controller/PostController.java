@@ -19,6 +19,8 @@ public class PostController {
 
     @Autowired
     private PostService postService;
+    @Autowired
+    private com.gk.study.service.UserService userService;
 
     private final String UPLOAD_PATH = System.getProperty("user.dir") + "/upload/image/";
 

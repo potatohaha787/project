@@ -26,3 +26,10 @@ const listUserCommentsApi = async (params: any) => get<any>({ url: URL.listUserC
 const likeApi = async (params: any) => post<any>({ url: URL.like, params: params });
 
 export { listApi, createApi, deleteApi, listThingCommentsApi, listUserCommentsApi, likeApi };
+
+// 追加的游记专用评论接口
+export const createPostCommentApi = async (data: any) => post<any>({ url: '/api/postComment/create', data: data });
+export const listPostCommentsApi = async (params: any) => get<any>({ url: '/api/postComment/list', params: params });
+export const likePostCommentApi = async (params: any) => post<any>({ url: '/api/postComment/like', params: params });
+// 👇 必须要有下面这行！白屏大概率是因为缺了它！
+export const cancelLikePostCommentApi = async (params: any) => post<any>({ url: '/api/postComment/cancelLike', params: params });

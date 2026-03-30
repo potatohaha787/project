@@ -140,18 +140,19 @@ const onSubmit = async (values) => {
     formData.append('title', values.title)
     formData.append('userId', currentUserId)
 
-    // 如果游记表没有专门的 location 和 tags 字段，我们可以巧妙地把它们拼接到正文后面
-    let finalContent = values.content
+    // ✅ 关键修改：直接将 location 作为独立字段传入，后端会自动映射到数据库的 location 字段
     if (values.location) {
-      finalContent += `<br/><br/>📍 <b>打卡地点：</b>${values.location}`
+      formData.append('location', values.location)
     }
+
+    // 至于标签（tags），如果数据库没有专门的字段，我们依然可以把它优雅地拼在正文底部
+    let finalContent = values.content
     if (values.tags && values.tags.length > 0) {
-      finalContent += `<br/>🏷️ <b>游记标签：</b>${values.tags.join('、')}`
+      finalContent += `<br/><br/>🏷️ <b>游记标签：</b>${values.tags.join('、')}`
     }
     formData.append('content', finalContent)
 
     // 3. 将之前拦截暂存的图片实体提取出来放进表单
-    // Ant Design Vue 的 file 对象真实文件藏在 originFileObj 属性里
     const rawFile = fileList.value[0].originFileObj || fileList.value[0]
     formData.append('imageFile', rawFile)
 
@@ -160,7 +161,7 @@ const onSubmit = async (values) => {
 
     message.success('🎉 游记发布成功！')
 
-    // 发布成功后清空表单并跳转回交流吧列表页 (路由名字根据您实际配置的调整)
+    // 发布成功后清空表单并跳转回交流吧列表页
     router.push({ name: 'ForumList' })
 
   } catch (error) {

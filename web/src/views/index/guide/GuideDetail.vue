@@ -73,7 +73,11 @@
                   <p class="c-text">{{ comment.content }}</p>
                   <div class="c-actions">
                     <span class="action">回复</span>
-                    <span class="action">👍 {{ comment.likes }}</span>
+                    <span class="action"
+                      :style="{ color: comment.hasLiked ? '#d97706' : '', fontWeight: comment.hasLiked ? 'bold' : 'normal' }"
+                      @click="handleLikeComment(comment)">
+                      {{ comment.hasLiked ? '已赞' : '👍' }} {{ comment.likes }}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -86,7 +90,7 @@
             <div class="related-card">
               <h3 class="sidebar-title">更多香山探索</h3>
               <div class="related-list">
-                <div class="related-item" v-for="item in relatedArticles" :key="item.id">
+                <div class="related-item" v-for="item in relatedArticles" :key="item.id" @click="goToDetail(item.id)">
                   <div class="r-cover">
                     <img :src="item.cover" alt="" />
                   </div>
@@ -97,7 +101,6 @@
                 </div>
               </div>
             </div>
-
           </div>
         </a-col>
 
@@ -109,7 +112,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+// ✅ 必须引入 watch 才能监听网址变化
+import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
@@ -118,6 +122,7 @@ import { message } from 'ant-design-vue'
 // 引入真实的 API 和 全局常量
 import { getPostDetailApi, getPostListApi } from '/@/api/post'
 import { BASE_URL } from "/@/store/constants"
+import { createPostCommentApi, listPostCommentsApi, likePostCommentApi, cancelLikePostCommentApi } from '/@/api/comment'
 
 const route = useRoute()
 const router = useRouter()
@@ -127,9 +132,9 @@ const isLiked = ref(false)
 const isCollected = ref(false)
 const isFollowed = ref(false)
 const isSubmitting = ref(false)
-const commentText = ref('')
+const commentText = ref('') // 输入框绑定的内容
 
-// 定义游记详细数据（先给一个空结构防止模板渲染报错）
+// 定义游记详细数据
 const article = ref({
   id: '',
   title: '',
@@ -145,63 +150,77 @@ const article = ref({
   content: ''
 })
 
-const comments = ref([]) // 如果你有评论接口，可仿照游记逻辑请求，此处先置空或保留你的模拟数据
+const comments = ref([]) // 评论列表
 const relatedArticles = ref([]) // 相关游记列表
 
-// 1. 获取游记详情数据
+// --- 数据获取方法 ---
+
+// 1. 获取历史评论
+const fetchComments = async (id) => {
+  try {
+    const res = await listPostCommentsApi({ postId: id })
+    if (res.code === 200) {
+      const currentUserId = localStorage.getItem('user_id') || 'guest'
+      const likedRecords = JSON.parse(localStorage.getItem(`liked_comments_${currentUserId}`) || '[]')
+
+      comments.value = res.data.map(item => ({
+        id: item.id,
+        avatar: 'https://joeschmoe.io/api/v1/random',
+        author: item.username || '热心网友',
+        time: item.commentTime || '刚刚',
+        content: item.content,
+        likes: item.likeCount || 0,
+        hasLiked: likedRecords.includes(item.id)
+      }))
+    }
+  } catch (error) {
+    console.error('获取评论失败', error)
+  }
+}
+
+// 2. 获取游记详情数据
 const loadArticleDetail = () => {
   const id = route.query.id
-  if (!id) {
-    message.error('参数错误：缺少游记ID')
-    return
-  }
+  if (!id) return
 
   getPostDetailApi({ id: id }).then((res) => {
     if (res.code === 200) {
       let data = res.data
-
-      // 处理封面图路径
       let coverUrl = data.cover || ''
       if (coverUrl && !coverUrl.startsWith('http')) {
         coverUrl = BASE_URL + '/api/staticfiles/image/' + coverUrl
       }
 
-      // 处理作者头像路径
       let avatarUrl = data.authorAvatar || ''
       if (avatarUrl && !avatarUrl.startsWith('http')) {
         avatarUrl = BASE_URL + '/api/staticfiles/avatar/' + avatarUrl
       }
 
-      // 将数据库字段映射到前端所需的数据结构
       article.value = {
         id: data.id,
         title: data.title,
         cover: coverUrl,
         location: data.location || '未知地点',
         time: data.createTime,
-        views: data.pv || 0,                 // 数据库的 pv 映射为 views
-        likes: data.likeCount || 0,          // 数据库的 likeCount 映射为 likes
+        views: data.pv || 0,
+        likes: data.likeCount || 0,
         author: data.authorName || '匿名用户',
-        authorAvatar: avatarUrl || 'https://joeschmoe.io/api/v1/random', // 默认头像
+        authorAvatar: avatarUrl || 'https://joeschmoe.io/api/v1/random',
         authorDesc: '该用户很懒，什么都没写~',
         tags: data.tags || [],
         content: data.content || '<p>暂无内容</p>'
       }
-    } else {
-      message.error(res.msg || '获取游记详情失败')
     }
   }).catch((err) => {
     console.error('获取详情异常', err)
   })
 }
 
-// 2. 获取右侧“相关游记”推荐 (调用列表接口获取几条 guide 数据)
+// 3. 获取右侧“相关游记”推荐
 const loadRelatedArticles = () => {
-  // 请求游记类型的数据，并在前端截取前3个作为推荐
   getPostListApi({ type: 'guide' }).then((res) => {
     if (res.code === 200) {
       let list = res.data || []
-      // 过滤掉当前正在看的这篇，并取前 3 篇
       list = list.filter(item => String(item.id) !== String(route.query.id)).slice(0, 3)
 
       relatedArticles.value = list.map(item => {
@@ -220,43 +239,120 @@ const loadRelatedArticles = () => {
   })
 }
 
-// 切换喜欢/收藏
+// --- 交互方法 ---
+
+// 提交新评论
+const submitComment = async () => {
+  if (!commentText.value.trim()) {
+    message.warning('请输入回复内容')
+    return
+  }
+
+  const currentUserId = localStorage.getItem('user_id')
+  if (!currentUserId) {
+    message.warning('请先登录后再回复哦！')
+    return
+  }
+
+  isSubmitting.value = true
+
+  const requestParams = new URLSearchParams()
+  requestParams.append('content', commentText.value.trim())
+  requestParams.append('postId', route.query.id)
+  requestParams.append('userId', currentUserId)
+
+  try {
+    const res = await createPostCommentApi(requestParams)
+    if (res.code === 200) {
+      message.success('回复发表成功！')
+      commentText.value = ''
+      fetchComments(route.query.id)
+    } else {
+      message.error(res.msg || '回复失败')
+    }
+  } catch (error) {
+    console.error(error)
+    message.error('网络异常，发表失败')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+// 点赞/取消点赞评论
+const handleLikeComment = async (comment) => {
+  const currentUserId = localStorage.getItem('user_id') || 'guest'
+  const likeRecordKey = `liked_comments_${currentUserId}`
+  let likedRecords = JSON.parse(localStorage.getItem(likeRecordKey) || '[]')
+
+  if (comment.hasLiked) {
+    // 执行取消点赞
+    try {
+      const res = await cancelLikePostCommentApi({ id: comment.id })
+      if (res.code === 200) {
+        comment.likes -= 1
+        comment.hasLiked = false
+        likedRecords = likedRecords.filter(id => id !== comment.id)
+        localStorage.setItem(likeRecordKey, JSON.stringify(likedRecords))
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  } else {
+    // 执行点赞
+    try {
+      const res = await likePostCommentApi({ id: comment.id })
+      if (res.code === 200) {
+        comment.likes += 1
+        comment.hasLiked = true
+        likedRecords.push(comment.id)
+        localStorage.setItem(likeRecordKey, JSON.stringify(likedRecords))
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+}
+
+// 游记文章本身的喜欢/收藏
 const toggleLike = () => {
   isLiked.value = !isLiked.value;
   if (isLiked.value) message.success('点赞成功！')
-  // TODO: 后期可以调用点赞后端的 API
 }
 
 const toggleCollect = () => {
   isCollected.value = !isCollected.value;
   if (isCollected.value) message.success('已加入收藏夹！')
-  // TODO: 后期可以调用收藏后端的 API
 }
 
-// 发表评论（模拟交互）
-const submitComment = () => {
-  if (!commentText.value.trim()) { message.warning('写点什么再发表吧~'); return }
-  isSubmitting.value = true
-  setTimeout(() => {
-    comments.value.unshift({
-      id: Date.now(),
-      author: '当前用户',
-      avatar: 'https://joeschmoe.io/api/v1/random',
-      time: '刚刚',
-      content: commentText.value,
-      likes: 0
-    })
-    commentText.value = ''
-    isSubmitting.value = false
-    message.success('留言成功！')
-    // TODO: 后期替换为真实的提交评论 API
-  }, 800)
+// ✅ 跳转函数：点击右侧卡片修改网址参数
+const goToDetail = (id) => {
+  router.push({ query: { id: id } })
 }
 
-// 页面挂载时请求数据
+// --- 生命周期函数与监听器 ---
+
+// 将加载所有数据的逻辑提取为一个通用方法
+const loadPageData = () => {
+  const id = route.query.id
+  if (id) {
+    loadArticleDetail()
+    loadRelatedArticles()
+    fetchComments(id)
+    // 每次切换文章时，页面平滑滚动回顶部
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
+
+// 初次打开页面时加载数据
 onMounted(() => {
-  loadArticleDetail()
-  loadRelatedArticles()
+  loadPageData()
+})
+
+// ✅ 监听网址的 ID 变化，只要点击右侧卡片发生变化，就自动重新请求新文章的数据
+watch(() => route.query.id, (newId, oldId) => {
+  if (newId && newId !== oldId) {
+    loadPageData()
+  }
 })
 </script>
 
