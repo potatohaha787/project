@@ -12,6 +12,11 @@
           <span class="publish-time">{{ article.time }}</span>
         </div>
         <h1 class="article-title">{{ article.title }}</h1>
+
+        <div class="hero-author" style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+          <a-avatar :src="article.authorAvatar" :size="36" style="border: 2px solid #fff;" />
+          <span class="author-name" style="font-size: 15px; font-weight: 500;">{{ article.author }}</span>
+        </div>
         <div class="hero-stats">
           <span><i class="iconfont icon-eye"></i> {{ article.views }} 阅读</span>
           <span class="divider">|</span>
@@ -34,15 +39,21 @@
 
             <div class="interaction-bar">
               <div class="action-btn" :class="{ active: isLiked }" @click="toggleLike">
-                <div class="icon-circle"><i class="iconfont icon-heart"></i></div>
-                <span>{{ isLiked ? '已喜欢' : '喜欢' }} ({{ article.likes + (isLiked ? 1 : 0) }})</span>
+                <div class="icon-circle">
+                  <img :src="WantIcon" class="action-icon" />
+                </div>
+                <span>{{ isLiked ? '已喜欢' : '喜欢' }} ({{ article.likes }})</span>
               </div>
               <div class="action-btn" :class="{ active: isCollected }" @click="toggleCollect">
-                <div class="icon-circle"><i class="iconfont icon-star"></i></div>
+                <div class="icon-circle">
+                  <img :src="RecommendIcon" class="action-icon" />
+                </div>
                 <span>{{ isCollected ? '已收藏' : '收藏' }}</span>
               </div>
               <div class="action-btn share-btn">
-                <div class="icon-circle"><i class="iconfont icon-share"></i></div>
+                <div class="icon-circle">
+                  <img :src="ShareIcon" class="action-icon" />
+                </div>
                 <span>分享</span>
               </div>
             </div>
@@ -52,9 +63,9 @@
             <h3 class="section-title">游记留言 <span>({{ comments.length }})</span></h3>
 
             <div class="comment-input-box">
-              <a-avatar src="https://joeschmoe.io/api/v1/random" :size="40" />
+              <a-avatar :src="currentUserAvatar" :size="40" />
               <div class="input-wrapper">
-                <a-textarea v-model:value="commentText" placeholder="留下你的足迹或向作者提问..." :rows="3" />
+                <a-textarea ref="commentInputRef" v-model:value="commentText" placeholder="留下你的足迹或向作者提问..." :rows="3" />
                 <div class="input-actions">
                   <a-button type="primary" class="submit-btn" @click="submitComment"
                     :loading="isSubmitting">发表留言</a-button>
@@ -72,7 +83,7 @@
                   </div>
                   <p class="c-text">{{ comment.content }}</p>
                   <div class="c-actions">
-                    <span class="action">回复</span>
+                    <span class="action" @click="handleReply(comment)">回复</span>
                     <span class="action"
                       :style="{ color: comment.hasLiked ? '#d97706' : '', fontWeight: comment.hasLiked ? 'bold' : 'normal' }"
                       @click="handleLikeComment(comment)">
@@ -112,15 +123,16 @@
 </template>
 
 <script setup>
-// ✅ 必须引入 watch 才能监听网址变化
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
 import { message } from 'ant-design-vue'
+import WantIcon from '/@/assets/images/want-read-hover.svg';
+import RecommendIcon from '/@/assets/images/recommend-hover.svg';
+import ShareIcon from '/@/assets/images/share-icon.svg';
 
-// 引入真实的 API 和 全局常量
-import { getPostDetailApi, getPostListApi } from '/@/api/post'
+import { getPostDetailApi, getPostListApi, likePostApi, cancelLikePostApi, collectPostApi, cancelCollectPostApi } from '/@/api/post'
 import { BASE_URL } from "/@/store/constants"
 import { createPostCommentApi, listPostCommentsApi, likePostCommentApi, cancelLikePostCommentApi } from '/@/api/comment'
 
@@ -133,6 +145,10 @@ const isCollected = ref(false)
 const isFollowed = ref(false)
 const isSubmitting = ref(false)
 const commentText = ref('') // 输入框绑定的内容
+const commentInputRef = ref(null)
+
+// 当前登录用户的头像
+const currentUserAvatar = ref('https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png')
 
 // 定义游记详细数据
 const article = ref({
@@ -153,9 +169,19 @@ const article = ref({
 const comments = ref([]) // 评论列表
 const relatedArticles = ref([]) // 相关游记列表
 
-// --- 数据获取方法 ---
+onMounted(() => {
+  loadPageData()
 
-// 1. 获取历史评论
+  const savedAvatar = localStorage.getItem('user_avatar') || localStorage.getItem('avatar');
+  if (savedAvatar) {
+    if (!savedAvatar.startsWith('http')) {
+      currentUserAvatar.value = BASE_URL + '/api/staticfiles/avatar/' + savedAvatar;
+    } else {
+      currentUserAvatar.value = savedAvatar;
+    }
+  }
+})
+
 const fetchComments = async (id) => {
   try {
     const res = await listPostCommentsApi({ postId: id })
@@ -163,25 +189,40 @@ const fetchComments = async (id) => {
       const currentUserId = localStorage.getItem('user_id') || 'guest'
       const likedRecords = JSON.parse(localStorage.getItem(`liked_comments_${currentUserId}`) || '[]')
 
-      comments.value = res.data.map(item => ({
-        id: item.id,
-        avatar: 'https://joeschmoe.io/api/v1/random',
-        author: item.username || '热心网友',
-        time: item.commentTime || '刚刚',
-        content: item.content,
-        likes: item.likeCount || 0,
-        hasLiked: likedRecords.includes(item.id)
-      }))
+      comments.value = res.data.map(item => {
+        let avatarUrl = item.avatar || item.userAvatar || item.authorAvatar || '';
+        if (avatarUrl && !avatarUrl.startsWith('http')) {
+          avatarUrl = BASE_URL + '/api/staticfiles/avatar/' + avatarUrl;
+        }
+
+        return {
+          id: item.id,
+          avatar: avatarUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
+          author: item.nickname || item.username || item.userId || '未知用户',
+          time: item.commentTime || '刚刚',
+          content: item.content,
+          likes: item.likeCount || 0,
+          hasLiked: likedRecords.includes(item.id)
+        }
+      })
     }
   } catch (error) {
     console.error('获取评论失败', error)
   }
 }
 
-// 2. 获取游记详情数据
 const loadArticleDetail = () => {
   const id = route.query.id
   if (!id) return
+
+  // 获取初始点赞和收藏状态
+  const currentUserId = localStorage.getItem('user_id')
+  if (currentUserId) {
+    const collectedPosts = JSON.parse(localStorage.getItem(`collected_posts_${currentUserId}`) || '[]')
+    const likedPosts = JSON.parse(localStorage.getItem(`liked_posts_${currentUserId}`) || '[]')
+    isCollected.value = collectedPosts.includes(String(id))
+    isLiked.value = likedPosts.includes(String(id))
+  }
 
   getPostDetailApi({ id: id }).then((res) => {
     if (res.code === 200) {
@@ -216,7 +257,6 @@ const loadArticleDetail = () => {
   })
 }
 
-// 3. 获取右侧“相关游记”推荐
 const loadRelatedArticles = () => {
   getPostListApi({ type: 'guide' }).then((res) => {
     if (res.code === 200) {
@@ -239,9 +279,23 @@ const loadRelatedArticles = () => {
   })
 }
 
-// --- 交互方法 ---
+const handleReply = (comment) => {
+  commentText.value = `回复 @${comment.author} : `
+  const inputBox = document.querySelector('.comment-input-box')
+  if (inputBox) {
+    const offsetTop = inputBox.getBoundingClientRect().top + window.scrollY - 100
+    window.scrollTo({
+      top: offsetTop,
+      behavior: 'smooth'
+    })
+  }
+  setTimeout(() => {
+    if (commentInputRef.value) {
+      commentInputRef.value.focus()
+    }
+  }, 300)
+}
 
-// 提交新评论
 const submitComment = async () => {
   if (!commentText.value.trim()) {
     message.warning('请输入回复内容')
@@ -284,10 +338,13 @@ const handleLikeComment = async (comment) => {
   const likeRecordKey = `liked_comments_${currentUserId}`
   let likedRecords = JSON.parse(localStorage.getItem(likeRecordKey) || '[]')
 
+  // ✅ 核心修复：使用 URLSearchParams 解决 400 报错
+  const formData = new URLSearchParams()
+  formData.append('id', comment.id)
+
   if (comment.hasLiked) {
-    // 执行取消点赞
     try {
-      const res = await cancelLikePostCommentApi({ id: comment.id })
+      const res = await cancelLikePostCommentApi(formData)
       if (res.code === 200) {
         comment.likes -= 1
         comment.hasLiked = false
@@ -298,9 +355,8 @@ const handleLikeComment = async (comment) => {
       console.error(error)
     }
   } else {
-    // 执行点赞
     try {
-      const res = await likePostCommentApi({ id: comment.id })
+      const res = await likePostCommentApi(formData)
       if (res.code === 200) {
         comment.likes += 1
         comment.hasLiked = true
@@ -313,42 +369,89 @@ const handleLikeComment = async (comment) => {
   }
 }
 
-// 游记文章本身的喜欢/收藏
-const toggleLike = () => {
-  isLiked.value = !isLiked.value;
-  if (isLiked.value) message.success('点赞成功！')
+// 游记文章本身的喜欢
+const toggleLike = async () => {
+  const currentUserId = localStorage.getItem('user_id') || 'guest'
+  const likeRecordKey = `liked_posts_${currentUserId}`
+  let likedPosts = JSON.parse(localStorage.getItem(likeRecordKey) || '[]')
+  const postId = route.query.id
+
+  // ✅ 核心修复：使用 URLSearchParams
+  const formData = new URLSearchParams()
+  formData.append('id', postId)
+
+  if (isLiked.value) {
+    // 取消点赞
+    const res = await cancelLikePostApi(formData)
+    if (res.code === 200) {
+      isLiked.value = false
+      article.value.likes -= 1
+      likedPosts = likedPosts.filter(id => id !== postId)
+      localStorage.setItem(likeRecordKey, JSON.stringify(likedPosts))
+    }
+  } else {
+    // 点赞
+    const res = await likePostApi(formData)
+    if (res.code === 200) {
+      isLiked.value = true
+      article.value.likes += 1
+      likedPosts.push(postId)
+      localStorage.setItem(likeRecordKey, JSON.stringify(likedPosts))
+      message.success('点赞成功！', 1)
+    }
+  }
 }
 
-const toggleCollect = () => {
-  isCollected.value = !isCollected.value;
-  if (isCollected.value) message.success('已加入收藏夹！')
+// 游记文章的收藏
+const toggleCollect = async () => {
+  const currentUserId = localStorage.getItem('user_id')
+  if (!currentUserId) {
+    message.warn('请先登录！')
+    return
+  }
+
+  const collectRecordKey = `collected_posts_${currentUserId}`
+  let collectedPosts = JSON.parse(localStorage.getItem(collectRecordKey) || '[]')
+  const postId = route.query.id
+
+  // ✅ 核心修复：同时把 id(游记ID) 和 userId 传给后端
+  const formData = new URLSearchParams()
+  formData.append('id', postId)
+  formData.append('userId', currentUserId) // 👈 必须传 userId，后端才能存进表里
+
+  if (isCollected.value) {
+    const res = await cancelCollectPostApi(formData)
+    if (res.code === 200) {
+      isCollected.value = false
+      collectedPosts = collectedPosts.filter(id => id !== postId)
+      localStorage.setItem(collectRecordKey, JSON.stringify(collectedPosts))
+      message.success('已取消收藏')
+    }
+  } else {
+    const res = await collectPostApi(formData)
+    if (res.code === 200) {
+      isCollected.value = true
+      collectedPosts.push(postId)
+      localStorage.setItem(collectRecordKey, JSON.stringify(collectedPosts))
+      message.success('已加入收藏夹！', 1)
+    }
+  }
 }
 
-// ✅ 跳转函数：点击右侧卡片修改网址参数
 const goToDetail = (id) => {
   router.push({ query: { id: id } })
 }
 
-// --- 生命周期函数与监听器 ---
-
-// 将加载所有数据的逻辑提取为一个通用方法
 const loadPageData = () => {
   const id = route.query.id
   if (id) {
     loadArticleDetail()
     loadRelatedArticles()
     fetchComments(id)
-    // 每次切换文章时，页面平滑滚动回顶部
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 }
 
-// 初次打开页面时加载数据
-onMounted(() => {
-  loadPageData()
-})
-
-// ✅ 监听网址的 ID 变化，只要点击右侧卡片发生变化，就自动重新请求新文章的数据
 watch(() => route.query.id, (newId, oldId) => {
   if (newId && newId !== oldId) {
     loadPageData()
@@ -359,9 +462,7 @@ watch(() => route.query.id, (newId, oldId) => {
 <style scoped lang="less">
 @bg-color: #f4f6f9;
 @zs-green: #064e3b;
-/* 深翠绿 */
 @zs-yellow: #d97706;
-/* 琥珀黄 */
 @dark-text: #1e293b;
 @light-text: #64748b;
 
@@ -371,15 +472,12 @@ watch(() => route.query.id, (newId, oldId) => {
   padding-bottom: 100px;
 }
 
-/* --- 1. 沉浸式宽幅头图 --- */
 .article-hero {
   position: relative;
   height: 500px;
-  /* 宽幅大图，视觉冲击力强 */
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
-  /* 视差滚动效果 */
   display: flex;
   align-items: flex-end;
   padding-bottom: 60px;
@@ -390,7 +488,6 @@ watch(() => route.query.id, (newId, oldId) => {
     left: 0;
     right: 0;
     bottom: 0;
-    /* 从上到下渐变，底部较深以突出文字 */
     background: linear-gradient(to bottom, rgba(6, 40, 30, 0.1) 0%, rgba(6, 40, 30, 0.8) 100%);
   }
 
@@ -450,13 +547,11 @@ watch(() => route.query.id, (newId, oldId) => {
 .detail-container {
   max-width: 1200px;
   margin: -40px auto 0;
-  /* 负边距让内容区往上浮动，压住头图 */
   position: relative;
   z-index: 10;
   padding: 0 20px;
 }
 
-/* --- 2. 左侧：正文与互动区 --- */
 .article-main-card {
   background: #fff;
   border-radius: 12px;
@@ -465,7 +560,6 @@ watch(() => route.query.id, (newId, oldId) => {
   margin-bottom: 30px;
 }
 
-/* 杂志级排版正文 */
 .article-body {
   font-size: 17px;
   color: #334155;
@@ -560,7 +654,7 @@ watch(() => route.query.id, (newId, oldId) => {
   }
 }
 
-/* 底部互动点赞条 */
+/* 修复了嵌套的 interaction-bar 样式 */
 .interaction-bar {
   display: flex;
   justify-content: center;
@@ -584,8 +678,14 @@ watch(() => route.query.id, (newId, oldId) => {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
       transition: all 0.3s;
+
+      .action-icon {
+        width: 26px;
+        height: 26px;
+        object-fit: contain;
+        transition: transform 0.3s;
+      }
     }
 
     span {
@@ -607,22 +707,16 @@ watch(() => route.query.id, (newId, oldId) => {
 
       .icon-circle {
         background: rgba(217, 119, 6, 0.1);
-        color: @zs-yellow;
-      }
-    }
 
-    &.share-btn:hover {
-      color: @zs-green;
-
-      .icon-circle {
-        background: rgba(6, 78, 59, 0.1);
-        color: @zs-green;
+        /* 当激活时，使用滤镜让 SVG 图标变成琥珀黄色 */
+        .action-icon {
+          filter: sepia(1) saturate(100%) hue-rotate(5deg) brightness(0.9) contrast(1.2);
+        }
       }
     }
   }
 }
 
-/* 评论区 */
 .comments-card {
   background: #fff;
   border-radius: 12px;
@@ -731,14 +825,11 @@ watch(() => route.query.id, (newId, oldId) => {
   }
 }
 
-/* --- 3. 右侧：侧边栏 --- */
 .sidebar-wrapper {
   position: sticky;
   top: 100px;
-  /* 悬浮侧边栏，页面滚动时保持在视口内 */
 }
 
-/* 相关游记 */
 .related-card {
   background: #fff;
   border-radius: 12px;

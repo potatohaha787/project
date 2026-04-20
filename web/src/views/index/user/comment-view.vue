@@ -9,11 +9,14 @@
               <img :src="item.cover" class="avatar">
               <div class="infos">
                 <div class="name flex-view">
-                  <h3></h3>
-                  <h3 @click="handleClickTitle(item)">《{{item.title}}》</h3>
+                  <h3> 评论了</h3>
+                  <h3 @click="handleClickTitle(item)" style="color: #0b6a65; cursor: pointer; margin-left: 8px;"
+                    title="点击查看详情">
+                    《{{ item.title }}》
+                  </h3>
                 </div>
-                <div class="time">{{ getFormatTime(item.commentTime, true)}}</div>
-                <div class="content">{{item.content}}</div>
+                <div class="time">{{ getFormatTime(item.commentTime, true) }}</div>
+                <div class="content">{{ item.content }}</div>
               </div>
             </div>
           </div>
@@ -24,41 +27,83 @@
 </template>
 
 <script setup>
-import {useUserStore} from "/@/store";
+import { useUserStore } from "/@/store";
+import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { message } from 'ant-design-vue'
+
+// 导入景区评论 API
+import { listUserCommentsApi } from '/@/api/comment'
+// 导入自定义 request 发起对新增接口的调用
+import { get } from '/@/utils/http/axios'
+import { BASE_URL } from "/@/store/constants";
+import { getFormatTime } from '/@/utils'
 
 const router = useRouter();
 const userStore = useUserStore();
-
-import {listUserCommentsApi} from '/@/api/comment'
-import {BASE_URL} from "/@/store/constants";
-import {getFormatTime} from '/@/utils'
-
 const loading = ref(false)
-
 const commentData = ref([])
 
-onMounted(()=>{
+onMounted(() => {
   getCommentList()
 })
 
-const handleClickTitle =(record)=> {
-  let text = router.resolve({name: 'detail', query: {id: record.thingId}})
-  window.open(text.href, '_blank')
+const handleClickTitle = (record) => {
+  if (record.isPost) {
+    // 如果是游记/帖子，跳转到游记详情
+    let text = router.resolve({ name: 'GuideDetail', query: { id: record.thingId } })
+    window.open(text.href, '_blank')
+  } else {
+    // 否则跳转到景区详情
+    let text = router.resolve({ name: 'detail', query: { id: record.thingId } })
+    window.open(text.href, '_blank')
+  }
 }
 
-const getCommentList =()=> {
+const getCommentList = async () => {
   loading.value = true
   let userId = userStore.user_id
-  listUserCommentsApi({userId: userId}).then(res => {
-    res.data.forEach(item => {
-      item.cover = BASE_URL + '/api/staticfiles/image/' + item.cover
+
+  try {
+    // 1. 获取景区评论
+    const resThing = await listUserCommentsApi({ userId: userId })
+    let thingComments = resThing.data.map(item => {
+      return {
+        ...item,
+        cover: BASE_URL + '/api/staticfiles/image/' + item.cover,
+        isPost: false // 标记为非游记
+      }
     })
-    commentData.value = res.data
+
+    // 2. 获取游记评论 (调用刚才在后端新增的接口)
+    const resPost = await get({ url: '/api/postComment/userList', params: { userId: userId } })
+    let postComments = resPost.data.map(item => {
+      // 游记封面可能存的是相对路径或者绝对路径，需要兼容处理
+      let coverUrl = item.cover || ''
+      if (coverUrl && !coverUrl.startsWith('http')) {
+        coverUrl = BASE_URL + '/api/staticfiles/image/' + coverUrl
+      }
+      return {
+        ...item,
+        thingId: item.postId, // 统一将 postId 映射为 thingId，方便前端共用点击跳转逻辑
+        cover: coverUrl,
+        isPost: true // 标记为游记
+      }
+    })
+
+    // 3. 合并两组数据，并按评论时间降序排序
+    let combinedData = [...thingComments, ...postComments]
+    combinedData.sort((a, b) => {
+      return new Date(b.commentTime) - new Date(a.commentTime)
+    })
+
+    commentData.value = combinedData
+
+  } catch (err) {
+    message.error(err.msg || '获取评论异常')
+  } finally {
     loading.value = false
-  }).catch(err => {
-    message.error(err.msg || '网络异常')
-    loading.value = false
-  })
+  }
 }
 
 </script>

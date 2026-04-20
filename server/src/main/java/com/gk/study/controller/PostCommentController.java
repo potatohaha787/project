@@ -35,4 +35,32 @@ public class PostCommentController {
         postCommentService.likePostComment(id);
         return new APIResponse(ResponeCode.SUCCESS, "点赞成功");
     }
+
+    // 👇 新增接口
+    @RequestMapping(value = "/userList", method = RequestMethod.GET)
+    public APIResponse userList(String userId) {
+        List<PostComment> list = postCommentService.getUserPostCommentList(userId);
+        return new APIResponse(ResponeCode.SUCCESS, "查询成功", list);
+    }
+
+    // 👇 新增：获取“我的消息”列表中的文章评论
+    @RequestMapping(value = "/myMessages", method = RequestMethod.GET)
+    public APIResponse myMessages(String userId) {
+        List<PostComment> list = postCommentService.getCommentsOnMyPosts(userId);
+        return new APIResponse(ResponeCode.SUCCESS, "查询成功", list);
+    }
+
+    // 👇 新增：后台获取游记评论列表
+    @RequestMapping(value = "/adminList", method = RequestMethod.GET)
+    public APIResponse adminList(String keyword) {
+        List<PostComment> list = postCommentService.getAdminPostCommentList(keyword);
+        return new APIResponse(ResponeCode.SUCCESS, "查询成功", list);
+    }
+
+    // 👇 新增：后台删除游记评论
+    @RequestMapping(value = "/delete", method = RequestMethod.POST)
+    public APIResponse delete(Long id) {
+        postCommentService.deletePostComment(id);
+        return new APIResponse(ResponeCode.SUCCESS, "删除成功");
+    }
 }

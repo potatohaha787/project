@@ -6,15 +6,15 @@
     <div class="list-content">
       <div class="collect-thing-view">
         <div class="thing-list flex-view">
-          <div class="thing-item item-column-3" v-for="(item,index) in pageData.collectData" :key="index">
+          <div class="thing-item item-column-3" v-for="(item, index) in pageData.collectData" :key="index">
             <div class="remove" @click="handleRemove(item)">移出</div>
             <div class="img-view" @click="handleClickItem(item)">
-              <img :src="item.cover">
+              <img :src="item.cover" />
             </div>
             <div class="info-view">
-              <h3 class="thing-name">{{item.title}}</h3>
-              <p class="authors" v-if="item.author">{{item.author}}（作者)</p>
-              <p class="translators" v-if="item.translator">{{item.translator}}（译者）</p>
+              <h3 class="thing-name">{{ item.title }}</h3>
+              <p class="authors" v-if="item.author">{{ item.author }}（作者)</p>
+              <p class="translators" v-if="item.translator">{{ item.translator }}（译者）</p>
             </div>
           </div>
         </div>
@@ -24,39 +24,46 @@
 </template>
 
 <script setup lang="ts">
-import {message} from 'ant-design-vue';
-import {userCollectListApi, unCollectApi} from '/@/api/thingCollect'
-import {BASE_URL} from "/@/store/constants";
-import {useUserStore} from "/@/store";
+import { reactive, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { message } from 'ant-design-vue';
+
+import { userCollectListApi, unCollectApi } from '/@/api/thingCollect'
+import { BASE_URL } from "/@/store/constants";
+import { useUserStore } from "/@/store";
 
 const router = useRouter();
 const userStore = useUserStore();
 
+// 修复：显式声明 any 数组类型，防止 ts 报错
 const pageData = reactive({
-  collectData: []
+  collectData: [] as any[]
 })
 
-onMounted(()=>{
+onMounted(() => {
   getCollectThingList()
 })
 
-const handleClickItem =(record) =>{
-  let text = router.resolve({name: 'detail', query: {id: record.id}})
+const handleClickItem = (record: any) => {
+  // 修改这里：使用景点专属的 thing_id 去进行跳转，兼容 thing_id 和 thingId 两种后端命名风格
+  const targetId = record.thing_id || record.thingId;
+  let text = router.resolve({ name: 'detail', query: { id: targetId } })
   window.open(text.href, '_blank')
 }
-const handleRemove =(record)=> {
-  let username = userStore.user_name
-  unCollectApi({id: record.id}).then(res => {
+const handleRemove = (record: any) => {
+  // 修复：移除了 let username = userStore.user_name 这行未使用的变量，防止 ESLint 报错
+  unCollectApi({ id: record.id }).then(res => {
     message.success('移除成功')
     getCollectThingList()
   }).catch(err => {
     console.log(err)
   })
 }
-const getCollectThingList =()=> {
+
+const getCollectThingList = () => {
   let userId = userStore.user_id
-  userCollectListApi({userId: userId}).then(res => {
-    res.data.forEach(item => {
+  userCollectListApi({ userId: userId }).then(res => {
+    res.data.forEach((item: any) => {
       item.cover = BASE_URL + '/api/staticfiles/image/' + item.cover
     })
     console.log(res.data)
@@ -65,8 +72,8 @@ const getCollectThingList =()=> {
     console.log(err.msg)
   })
 }
-
 </script>
+
 <style scoped lang="less">
 .flex-view {
   display: -webkit-box;
@@ -169,7 +176,8 @@ const getCollectThingList =()=> {
         margin: 12px 0 8px;
       }
 
-      .authors, .translators {
+      .authors,
+      .translators {
         color: #6f6f6f;
         font-size: 12px;
         line-height: 14px;

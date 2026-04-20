@@ -96,12 +96,17 @@
               <h3>🔥 活跃吧友</h3>
             </div>
             <div class="user-list">
-              <div class="user-item" v-for="i in 5" :key="i">
-                <a-avatar :src="`https://joeschmoe.io/api/v1/user${i}`" />
+              <div class="user-item" v-for="(user, index) in activeUsers" :key="index">
+                <a-avatar :src="user.avatar" />
                 <div class="user-info">
-                  <span class="u-name">香山达人 0{{ i }}</span>
-                  <span class="u-desc">发布了 {{ i * 12 }} 篇内容</span>
+                  <span class="u-name">{{ user.name }}</span>
+                  <span class="u-desc">发布了 {{ user.count }} 篇内容</span>
                 </div>
+              </div>
+
+              <div v-if="activeUsers.length === 0"
+                style="text-align: center; color: #94a3b8; padding: 10px 0; font-size: 13px;">
+                暂无活跃吧友
               </div>
             </div>
           </div>
@@ -174,7 +179,6 @@ const currentTab = ref('all')
 const currentPage = ref(1)
 
 // 核心：从数据库获取列表数据
-// 核心：从数据库获取列表数据
 const fetchPostList = async () => {
   try {
     const queryParams = {
@@ -183,28 +187,37 @@ const fetchPostList = async () => {
     const res = await getPostListApi(queryParams)
 
     // 将后端的数据映射为前端卡片需要的格式
-    topicList.value = res.data.map(item => ({
-      id: item.id,
+    topicList.value = res.data.map(item => {
 
-      // 1. 动态判断标签颜色和文字 (绿/蓝/黄)
-      type: item.type === 'guide' ? 'tag-share' : (item.type === 'ask' ? 'tag-ask' : 'tag-mate'),
-      tag: item.type === 'guide' ? '游记' : (item.type === 'ask' ? '求助' : (item.type === 'share' ? '分享' : '结伴')),
+      // ✅ 核心修复：处理头像路径拼接
+      let avatarUrl = item.authorAvatar || '';
+      if (avatarUrl && !avatarUrl.startsWith('http')) {
+        avatarUrl = BASE_URL + '/api/staticfiles/avatar/' + avatarUrl;
+      }
 
-      title: item.title,
+      return {
+        id: item.id,
 
-      // 2. 去掉富文本 HTML 标签，截取前 80 个字作为列表简介
-      desc: item.content ? item.content.replace(/<[^>]+>/g, '').substring(0, 80) + '...' : '',
+        // 1. 动态判断标签颜色和文字 (绿/蓝/黄)
+        type: item.type === 'guide' ? 'tag-share' : (item.type === 'ask' ? 'tag-ask' : 'tag-mate'),
+        tag: item.type === 'guide' ? '游记' : (item.type === 'ask' ? '求助' : (item.type === 'share' ? '分享' : '结伴')),
 
-      // 3. 动态绑定刚刚在后端查出来的作者头像和昵称 (如果没有，给个默认兜底)
-      avatar: item.authorAvatar || 'https://joeschmoe.io/api/v1/random',
-      author: item.authorName || '香山吧友',
+        title: item.title,
 
-      // 4. 将后端传来的时间戳 (如 1698127200000) 转化为可读日期
-      time: new Date(Number(item.createTime)).toLocaleDateString(),
+        // 2. 去掉富文本 HTML 标签，截取前 80 个字作为列表简介
+        desc: item.content ? item.content.replace(/<[^>]+>/g, '').substring(0, 80) + '...' : '',
 
-      views: item.pv || 0,
-      replies: item.likeCount || 0
-    }))
+        // ✅ 3. 修改这里：使用拼接好的真实头像，如果为空则使用国内稳定的占位图
+        avatar: avatarUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
+        author: item.authorName || '香山吧友',
+
+        // 4. 将后端传来的时间戳 (如 1698127200000) 转化为可读日期
+        time: new Date(Number(item.createTime)).toLocaleDateString(),
+
+        views: item.pv || 0,
+        replies: item.likeCount || 0
+      }
+    })
   } catch (error) {
     console.error("获取列表失败:", error)
   }
@@ -215,9 +228,59 @@ watch(currentTab, () => {
   fetchPostList()
 })
 
+// --- 活跃吧友统计逻辑 ---
+const activeUsers = ref([])
+
+const fetchActiveUsers = async () => {
+  try {
+    // 请求全站所有的帖子 (不传 type 参数)
+    const res = await getPostListApi({ type: '' })
+    if (res.code === 200 && res.data) {
+      const userMap = {}
+
+      // 1. 遍历所有帖子，按用户 ID 或用户名分组计数
+      res.data.forEach(item => {
+        const uId = item.userId || item.authorName || item.username || 'unknown'
+        const uName = item.nickname || item.username || item.authorName || '匿名吧友'
+
+        if (!userMap[uId]) {
+          userMap[uId] = {
+            id: uId,
+            name: uName,
+            avatar: item.authorAvatar || item.userAvatar || item.avatar || '',
+            count: 0
+          }
+        }
+        // 每次遍历到该用户的帖子，发帖数 +1
+        userMap[uId].count += 1
+      })
+
+      // 2. 将对象转换为数组，按发帖数降序排序，取前 5 名
+      activeUsers.value = Object.values(userMap)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5)
+        .map(user => {
+          // 处理真实的头像拼接
+          let avatarUrl = user.avatar;
+          if (avatarUrl && !avatarUrl.startsWith('http')) {
+            avatarUrl = BASE_URL + '/api/staticfiles/avatar/' + avatarUrl;
+          }
+          return {
+            ...user,
+            // 没头像的给出默认默认兜底
+            avatar: avatarUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
+          }
+        })
+    }
+  } catch (error) {
+    console.error("获取活跃吧友失败:", error)
+  }
+}
+
 // 页面加载时执行一次查询
 onMounted(() => {
   fetchPostList()
+  fetchActiveUsers() // ✅ 增加调用：获取侧边栏活跃吧友
 })
 
 // 切换选项卡

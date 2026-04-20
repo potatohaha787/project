@@ -29,5 +29,9 @@ public class Comment implements Serializable {
     public String title; // 景区名称
     @TableField(exist = false)
     public String cover; // 景区封面
+    @TableField(exist = false)
+    public String avatar;
+    @TableField(exist = false)
+    public String nickname;
 
 }

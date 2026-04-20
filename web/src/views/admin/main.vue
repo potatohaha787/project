@@ -35,50 +35,67 @@
             <span>香山美食</span>
           </a-menu-item>
 
-          <a-menu-item key="thing">
-            <database-outlined />
-            <span>景区管理</span>
-          </a-menu-item>
 
-          <a-menu-item key="classification">
-            <layout-outlined />
-            <span>景区类别</span>
-          </a-menu-item>
+          <a-sub-menu>
+            <template #icon>
+              <file-text-outlined />
+            </template>
+            <template #title>景区管理</template>
 
-          <a-menu-item key="comment">
-            <comment-outlined />
-            <span>评论管理</span>
-          </a-menu-item>
+            <a-menu-item key="thing">
+              <file-text-outlined />
+              <span>景点管理</span>
+            </a-menu-item>
+
+            <a-menu-item key="classification">
+              <file-text-outlined />
+              <span>景区类别</span>
+            </a-menu-item>
+
+            <a-menu-item key="comment">
+              <comment-outlined />
+              <span>景区评论管理</span>
+            </a-menu-item>
+          </a-sub-menu>
 
           <a-menu-item key="user">
             <user-outlined />
             <span>用户管理</span>
           </a-menu-item>
 
-          <a-menu-item key="adminPost">
-            <file-text-outlined />
-            <span>游记与社区</span>
-          </a-menu-item>
+          <a-sub-menu>
+            <template #icon>
+              <file-text-outlined />
+            </template>
+            <template #title>游记与社区</template>
+
+            <a-menu-item key="adminPost">
+              <file-text-outlined />
+              <span>游记管理</span>
+            </a-menu-item>
+
+            <a-menu-item key="adminPostComment">
+              <comment-outlined />
+              <span>游记评论</span>
+            </a-menu-item>
+          </a-sub-menu>
 
           <a-sub-menu>
             <template #icon>
               <folder-outlined />
             </template>
             <template #title>运营管理</template>
-            <a-menu-item key="ad">
-              <appstore-outlined />
-              <span>广告管理</span>
-            </a-menu-item>
             <a-menu-item key="notice">
               <appstore-outlined />
               <span>通知公告</span>
             </a-menu-item>
           </a-sub-menu>
-          <a-sub-menu>
+
+          <!-- <a-sub-menu>
             <template #icon>
               <folder-outlined />
             </template>
-            <template #title>日志管理</template>
+             <template #title>日志管理</template>
             <a-menu-item key="loginLog">
               <appstore-outlined />
               <span>登录日志</span>
@@ -92,10 +109,12 @@
               <span>错误日志</span>
             </a-menu-item>
           </a-sub-menu>
+          
           <a-menu-item key="overview">
-            <home-outlined />
-            <span>统计分析</span>
-          </a-menu-item>
+          <home-outlined />
+           <span>统计分析</span>
+           </a-menu-item>
+-->
           <a-menu-item key="sysInfo">
             <info-circle-outlined />
             <span>系统信息</span>
@@ -110,7 +129,7 @@
 </template>
 <script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router';
-import logo from '/@/assets/images/k-logo.png';
+import logo from '/@/assets/images/logo1.png';
 
 import {
   HomeOutlined,

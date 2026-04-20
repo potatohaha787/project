@@ -1,9 +1,9 @@
 <template>
   <div class="mine-infos-view">
     <div class="info-box flex-view">
-      <img :src="AvatarImg" class="avatar-img">
+      <img :src="userInfo.avatar || AvatarImg" class="avatar-img">
       <div class="name-box">
-        <h2 class="nick">{{ userStore.user_name }}</h2>
+        <h2 class="nick">{{ userInfo.nickname || userStore.user_name }}</h2>
         <div class="age">
           <span>活跃1天</span>
           <span class="give-point"></span>
@@ -60,10 +60,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 
-// 导入图片 (移除了无用的图标，将原订单图标用作游记图标)
+// 导入图片
 import AvatarImg from '/@/assets/images/avatar.jpg'
 import PostIconImg from '/@/assets/images/order-icon.svg'
 import CommentIconImg from '/@/assets/images/order-thing-icon.svg'
@@ -75,35 +75,77 @@ import { userCollectListApi } from '/@/api/thingCollect'
 import { userWishListApi } from '/@/api/thingWish'
 import { useUserStore } from '/@/store';
 
+// 🌟 新增导入：引入获取用户信息的API和 BASE_URL
+import { detailApi } from '/@/api/user'
+import { BASE_URL } from '/@/store/constants'
+
 const userStore = useUserStore();
 const router = useRouter();
 
 let collectCount = ref(0)
 let wishCount = ref(0)
 
+// 🌟 新增：用于存储动态的用户信息
+const userInfo = reactive({
+  avatar: '',
+  nickname: ''
+})
+
 onMounted(() => {
   getCollectThingList()
   getWishThingList()
+  getUserInfo() // 🌟 新增：组件挂载时获取一次最新的用户信息
+
+  // 🌟 修改：收到更新事件后，重新获取用户信息
+  window.addEventListener('userInfoUpdated', handleUserInfoUpdated)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('userInfoUpdated', handleUserInfoUpdated)
 })
 
 const clickMenu = (name: string) => {
   router.push({ name: name })
 }
 
+// 🌟 新增方法：处理用户更新事件
+const handleUserInfoUpdated = () => {
+  getUserInfo() // 重新拉取头像和昵称
+}
+
+// 🌟 新增方法：获取最新的用户信息
+const getUserInfo = () => {
+  let userId = userStore.user_id
+  if (!userId) return;
+
+  detailApi({ userId: userId }).then((res: any) => {
+    if (res.code === 200 && res.data) {
+      // 设置昵称
+      userInfo.nickname = res.data.nickname || res.data.username
+      // 设置头像（如果有头像，拼上后端基础路径；如果没有，模板里会fallback到默认图）
+      if (res.data.avatar) {
+        userInfo.avatar = BASE_URL + '/api/staticfiles/avatar/' + res.data.avatar
+      }
+    }
+  }).catch((err: any) => {
+    console.log(err)
+  })
+}
+
 const getCollectThingList = () => {
   let userId = userStore.user_id
-  userCollectListApi({ userId: userId }).then(res => {
+  userCollectListApi({ userId: userId }).then((res: any) => {
     collectCount.value = res.data.length
-  }).catch(err => {
+  }).catch((err: any) => {
     console.log(err.msg)
   })
 }
 
 const getWishThingList = () => {
   let userId = userStore.user_id
-  userWishListApi({ userId: userId }).then(res => {
+  userWishListApi({ userId: userId }).then((res: any) => {
     wishCount.value = res.data.length
-  }).catch(err => {
+  }).catch((err: any) => {
     console.log(err.msg)
   })
 }

@@ -128,6 +128,8 @@ import { useRouter } from 'vue-router'
 import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
 
+
+
 // 引入您的接口和常量
 import { getPostListApi } from '/@/api/post'
 import { BASE_URL } from '/@/store/constants'
@@ -176,7 +178,7 @@ const fetchCommunityData = async (keyword = '') => {
         cover: item.cover ? (BASE_URL + '/api/staticfiles/image/' + item.cover) : ImgTourism,
         location: item.location || '中山市',
         author: item.authorName || '香山体验师',
-        avatar: item.authorAvatar || 'https://joeschmoe.io/api/v1/random',
+        avatar: item.authorAvatar ? (item.authorAvatar.startsWith('http') ? item.authorAvatar : BASE_URL + '/api/staticfiles/avatar/' + item.authorAvatar) : 'https://joeschmoe.io/api/v1/random',
         views: item.pv || 0,
         likes: item.likeCount || 0
       }))

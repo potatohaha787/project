@@ -31,4 +31,18 @@ public class PostCommentServiceImpl implements PostCommentService {
     public void likePostComment(Long id) {
         postCommentMapper.incrementLikeCount(id);
     }
+
+    @Override
+    public List<PostComment> getUserPostCommentList(String userId) {
+        return postCommentMapper.listUserPostComments(userId);
+    }
+    @Override
+    public List<PostComment> getAdminPostCommentList(String keyword) { return postCommentMapper.getAdminPostCommentList(keyword); }
+    @Override
+    public void deletePostComment(Long id) { postCommentMapper.deleteById(id); }
+
+    @Override
+    public List<PostComment> getCommentsOnMyPosts(String userId) {
+        return postCommentMapper.listCommentsOnMyPosts(userId);
+    }
 }

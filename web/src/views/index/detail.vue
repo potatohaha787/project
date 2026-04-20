@@ -92,9 +92,9 @@
             <div class="comments-list">
               <div class="comment-item" v-for="item in commentData" :key="item.id">
                 <div class="flex-item flex-view">
-                  <img :src="AvatarIcon" class="avator">
+                  <img :src="item.avatar || AvatarIcon" class="avator">
                   <div class="person">
-                    <div class="name">{{ item.username }}</div>
+                    <div class="name">{{ item.nickname || item.username || '匿名用户' }}</div>
                     <div class="time">{{ item.commentTime }}</div>
                   </div>
                   <div class="float-right hover-btn" @click="like(item)">
@@ -256,12 +256,20 @@ const sendComment = () => {
   }
   let userId = userStore.user_id
   if (userId) {
-    createCommentApi({ content: text, thingId: thingId.value, userId: userId }).then(res => {
+    // ✅ 核心修复：使用 URLSearchParams 将数据转换为后端支持的表单格式
+    const formData = new URLSearchParams()
+    formData.append('content', text)
+    formData.append('thingId', thingId.value)
+    formData.append('userId', userId)
+
+    // 发送格式化后的 formData
+    createCommentApi(formData).then(res => {
       message.success('评论发布成功')
       commentRef.value.value = ''
-      getCommentList()
+      getCommentList() // 刷新评论列表
     }).catch(err => {
       console.log(err)
+      message.error('评论发布失败')
     })
   } else {
     message.warn('请先登录！')
@@ -310,6 +318,11 @@ const getCommentList = () => {
   listThingCommentsApi({ thingId: thingId.value, order: order.value }).then(res => {
     res.data.forEach(item => {
       item.commentTime = getFormatTime(item.commentTime, true)
+
+      // 👇 新增：处理头像真实路径的拼接
+      if (item.avatar && !item.avatar.startsWith('http')) {
+        item.avatar = BASE_URL + '/api/staticfiles/avatar/' + item.avatar
+      }
     })
     commentData.value = res.data
   }).catch(err => {

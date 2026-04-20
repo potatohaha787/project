@@ -1,52 +1,70 @@
 <template>
-  <div class="container">
-    <div class="login-page pc-style">
-      <img :src="LogoIcon" alt="logo" class="logo-icon">
-      <div class="login-tab">
-        <div class="tab-selected">
-          <span>邮箱登录</span>
-          <span class="tabline tabline-width"></span>
+  <div class="login-container">
+    <div class="bg-overlay"></div>
+
+    <div class="login-box">
+      <div class="brand-side hidden-mobile">
+        <div class="brand-content">
+          <img :src="LogoIcon" alt="logo" class="brand-logo">
+          <h1 class="brand-title">探索香山之美</h1>
+          <p class="brand-slogan">登录您的账号，开启中山文旅沉浸式体验之旅，发现更多人文与风景。</p>
         </div>
       </div>
-      <div class="mail-login" type="login">
-        <div class="common-input">
-          <img :src="MailIcon" class="left-icon">
-          <div class="input-view">
-            <input placeholder="请输入注册邮箱" v-model="pageData.loginForm.username" type="text" class="input">
-            <p class="err-view">
-            </p>
+
+      <div class="form-side">
+        <div class="form-header">
+          <h2>欢迎回来</h2>
+          <p>请输入您的账号密码</p>
+        </div>
+
+        <div class="login-tab">
+          <div class="tab-item active">
+            <span>登录</span>
+            <span class="tab-line"></span>
           </div>
-          <!---->
         </div>
-        <div class="common-input">
-          <img :src="PwdIcon" class="left-icon">
-          <div class="input-view">
-            <input placeholder="请输入密码" v-model="pageData.loginForm.password" type="password" class="input">
-            <p class="err-view">
-            </p>
+
+        <div class="form-body">
+          <div class="input-group">
+            <div class="input-icon-wrapper">
+              <img :src="MailIcon" class="input-icon">
+            </div>
+            <div class="input-content">
+              <input placeholder="请输入注册账号" v-model="pageData.loginForm.username" type="text" class="zs-input"
+                @keyup.enter="handleLogin">
+            </div>
           </div>
-          <!--          <img src="@/assets/pwd-hidden.svg" class="right-icon">-->
-          <!---->
+
+          <div class="input-group">
+            <div class="input-icon-wrapper">
+              <img :src="PwdIcon" class="input-icon">
+            </div>
+            <div class="input-content">
+              <input placeholder="请输入密码" v-model="pageData.loginForm.password" type="password" class="zs-input"
+                @keyup.enter="handleLogin">
+            </div>
+          </div>
+
+          <button class="zs-btn primary-btn" @click="handleLogin">登 录</button>
+
+          <div class="form-footer">
+            <a @click="handleCreateUser" class="link-btn">注册新账号</a>
+            <a class="link-btn">忘记密码？</a>
+          </div>
         </div>
-        <div class="next-btn-view">
-          <button class="next-btn btn-active" style="margin: 16px 0px;" @click="handleLogin">登录</button>
-        </div>
-      </div>
-      <div class="operation">
-        <a @click="handleCreateUser" class="forget-pwd" style="text-align: left;">注册新帐号</a>
-        <a class="forget-pwd" style="text-align: right;">忘记密码？</a>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { reactive } from 'vue';
+import { useRouter } from 'vue-router';
 import { useUserStore } from '/@/store';
 import { message } from "ant-design-vue";
-import LogoIcon from '/@/assets/images/k-logo.png';
+import LogoIcon from '/@/assets/images/logo1.png';
 import MailIcon from '/@/assets/images/mail-icon.svg';
 import PwdIcon from '/@/assets/images/pwd-icon.svg';
-
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -59,14 +77,20 @@ const pageData = reactive({
 })
 
 const handleLogin = () => {
+  if (!pageData.loginForm.username) {
+    message.warning('请输入账号')
+    return
+  }
+  if (!pageData.loginForm.password) {
+    message.warning('请输入密码')
+    return
+  }
+
   userStore.login({
     username: pageData.loginForm.username,
     password: pageData.loginForm.password
   }).then(res => {
     loginSuccess()
-    console.log('success==>', userStore.user_name)
-    console.log('success==>', userStore.user_id)
-    console.log('success==>', userStore.user_token)
   }).catch(err => {
     message.warn(err.msg || '登录失败')
   })
@@ -78,200 +102,272 @@ const handleCreateUser = () => {
 
 const loginSuccess = () => {
   router.push({ name: 'portal' })
-  message.success('登录成功！')
+  message.success('登录成功，欢迎回来！')
 }
-
-
 </script>
-<style scoped lang="less">
-div {
-  display: block;
-}
 
-.container {
-  //background-color: #f1f1f1;
-  background-image: url('../images/admin-login-bg.jpg');
+<style scoped lang="less">
+/* 中山文旅主题色 */
+@zs-green: #0b6a65;
+@zs-green-hover: #09504c;
+@zs-yellow: #c59d5f;
+@text-main: #1e293b;
+@text-light: #64748b;
+
+.login-container {
+  background-image: url('../../assets/images/bg2.jpg');
   background-size: cover;
-  object-fit: cover;
-  height: 100%;
-  max-width: 100%;
+  background-position: center;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
 }
 
-.new-content {
+.bg-overlay {
   position: absolute;
+  top: 0;
   left: 0;
   right: 0;
-  margin: 80px auto 0;
-  width: 980px;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
 }
 
-.logo-img {
-  width: 125px;
-  display: block;
-  margin-left: 137.5px;
-}
-
-.login-page {
+.login-box {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  width: 900px;
+  height: 520px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  background: #fff;
+}
 
-  .logo-icon {
-    margin-top: 20px;
-    margin-left: 175px;
-    width: 48px;
-    height: 48px;
+/* 左侧品牌区 */
+.brand-side {
+  flex: 1;
+  background: linear-gradient(135deg, @zs-green 0%, #064e3b 100%);
+  color: #fff;
+  padding: 60px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 60%);
+    pointer-events: none;
+  }
+
+  .brand-content {
+    position: relative;
+    z-index: 2;
+  }
+
+  .brand-logo {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 32px;
+    /* 移除了导致图标变成纯白色的 filter 和鼠标小手样式 */
+  }
+
+  .brand-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 20px;
+    font-family: 'Noto Serif SC', serif;
+  }
+
+  .brand-slogan {
+    font-size: 16px;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.8);
   }
 }
 
-.pc-style {
-  position: relative;
-  width: 400px;
-  height: 464px;
+/* 右侧表单区 */
+.form-side {
+  width: 440px;
+  padding: 50px 50px;
   background: #fff;
-  border-radius: 4px;
-  -webkit-box-shadow: 2px 2px 6px #aaa;
-  box-shadow: 2px 2px 6px #aaa;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-header {
+  margin-bottom: 30px;
+
+  h2 {
+    font-size: 28px;
+    font-weight: 600;
+    color: @text-main;
+    margin: 0 0 8px 0;
+  }
+
+  p {
+    font-size: 14px;
+    color: @text-light;
+    margin: 0;
+  }
 }
 
 .login-tab {
-  display: -webkit-box;
-  display: -ms-flexbox;
   display: flex;
-  color: #1e1e1e;
-  font-size: 14px;
-  color: #1e1e1e;
-  font-weight: 500;
-  height: 46px;
-  line-height: 44px;
-  margin-bottom: 40px;
-  border-bottom: 1px solid #c3c9d5;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 30px;
 
-  div {
+  .tab-item {
+    padding: 0 10px 12px;
+    font-size: 16px;
+    color: @text-light;
     position: relative;
-    -webkit-box-flex: 1;
-    -ms-flex: 1;
-    flex: 1;
-    text-align: center;
-    cursor: pointer;
-  }
 
-  .tabline {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: 0 auto;
-    display: inline-block;
-    width: 0;
-    height: 2px;
-    background: #3d5b96;
-    -webkit-transition: width .5s cubic-bezier(.46, 1, .23, 1.52);
-    transition: width .5s cubic-bezier(.46, 1, .23, 1.52);
-  }
+    &.active {
+      color: @zs-green;
+      font-weight: 600;
 
-  tab-selected {
-    color: #1e1e1e;
-    font-weight: 500;
-  }
+      .tab-line {
+        width: 100%;
+      }
+    }
 
-  .mail-login,
-  .tel-login {
-    padding: 0 28px;
+    .tab-line {
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 0;
+      height: 3px;
+      background: @zs-green;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
   }
-
 }
 
-.mail-login {
-  margin: 0px 24px;
-}
-
-.common-input {
-  display: -webkit-box;
-  display: -ms-flexbox;
+.form-body {
   display: flex;
-  -webkit-box-align: start;
-  -ms-flex-align: start;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 24px;
+}
 
-  .left-icon {
+.input-group {
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0 16px;
+  height: 50px;
+  transition: all 0.3s;
+
+  &:focus-within {
+    border-color: @zs-green;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(11, 106, 101, 0.1);
+  }
+
+  .input-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-right: 12px;
-    width: 24px;
+
+    .input-icon {
+      /* 调大了尺寸，并去掉了半透明设置，确保图标清晰 */
+      width: 24px;
+    }
   }
 
-  .input-view {
-    -webkit-box-flex: 1;
-    -ms-flex: 1;
+  .input-content {
     flex: 1;
 
-    .input {
-      font-weight: 500;
-      font-size: 14px;
-      color: #1e1e1e;
-      height: 26px;
-      line-height: 26px;
-      border: none;
-      padding: 0;
-      display: block;
+    .zs-input {
       width: 100%;
-      letter-spacing: 1.5px;
-    }
+      height: 100%;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 15px;
+      color: @text-main;
 
-    err-view {
-      margin-top: 4px;
-      height: 16px;
-      line-height: 16px;
-      font-size: 12px;
-      color: #f62a2a;
+      &::placeholder {
+        color: #94a3b8;
+      }
     }
   }
 }
 
-.next-btn {
-  background: #3d5b96;
-  border-radius: 4px;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 500;
-  height: 40px;
-  line-height: 40px;
-  text-align: center;
-  width: 100%;
-  outline: none;
+.zs-btn {
+  height: 50px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-}
-
-button {
-  background: transparent;
-  padding: 0;
-  border-width: 0px;
-}
-
-button,
-input,
-select,
-textarea {
-  margin: 0;
-  padding: 0;
+  border: none;
   outline: none;
+  transition: all 0.3s;
+  margin-top: 8px;
+
+  &.primary-btn {
+    background: @zs-green;
+    color: #fff;
+
+    &:hover {
+      background: @zs-green-hover;
+      box-shadow: 0 6px 15px rgba(11, 106, 101, 0.2);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
 }
 
-.operation {
+.form-footer {
   display: flex;
-  flex-direction: row;
-  margin: 0 24px;
+  justify-content: space-between;
+  margin-top: 16px;
+
+  .link-btn {
+    font-size: 14px;
+    color: @text-light;
+    cursor: pointer;
+    transition: color 0.3s;
+
+    &:hover {
+      color: @zs-yellow;
+    }
+  }
 }
 
-.forget-pwd {
-  //text-align: center;
-  display: block;
-  overflow: hidden;
-  flex: 1;
-  margin: 0 auto;
-  color: #3d5b96;
-  font-size: 14px;
-  cursor: pointer;
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .login-box {
+    width: 90%;
+    height: auto;
+    flex-direction: column;
+  }
+
+  .hidden-mobile {
+    display: none;
+  }
+
+  .form-side {
+    width: 100%;
+    padding: 40px 30px;
+  }
 }
 </style>

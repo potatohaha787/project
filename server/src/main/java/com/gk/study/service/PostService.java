@@ -21,4 +21,8 @@ public interface PostService extends IService<Post> {
 
     // 增加浏览量
     void addPv(Long id);
+    void likePost(Long id);
+    void cancelLikePost(Long id);
+    void collectPost(Long id);
+    void cancelCollectPost(Long id);
 }

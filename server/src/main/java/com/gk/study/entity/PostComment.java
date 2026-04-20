@@ -26,4 +26,15 @@ public class PostComment implements Serializable {
     // 数据库中没有，用于联合查询返回给前端展示
     @TableField(exist = false)
     public String username;
+
+    @TableField(exist = false)
+    public String avatar;
+
+    @TableField(exist = false)
+    public String nickname;
+
+    @TableField(exist = false)
+    public String title;
+    @TableField(exist = false)
+    public String cover;
 }

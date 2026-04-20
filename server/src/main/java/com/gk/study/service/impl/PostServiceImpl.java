@@ -88,4 +88,40 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             this.updateById(post);
         }
     }
+
+    @Override
+    public void likePost(Long id) {
+        Post post = this.getById(id);
+        if (post != null) {
+            post.setLikeCount((post.getLikeCount() == null ? 0 : post.getLikeCount()) + 1);
+            this.updateById(post);
+        }
+    }
+
+    @Override
+    public void cancelLikePost(Long id) {
+        Post post = this.getById(id);
+        if (post != null && post.getLikeCount() != null && post.getLikeCount() > 0) {
+            post.setLikeCount(post.getLikeCount() - 1);
+            this.updateById(post);
+        }
+    }
+
+    @Override
+    public void collectPost(Long id) {
+        Post post = this.getById(id);
+        if (post != null) {
+            post.setCollectCount((post.getCollectCount() == null ? 0 : post.getCollectCount()) + 1);
+            this.updateById(post);
+        }
+    }
+
+    @Override
+    public void cancelCollectPost(Long id) {
+        Post post = this.getById(id);
+        if (post != null && post.getCollectCount() != null && post.getCollectCount() > 0) {
+            post.setCollectCount(post.getCollectCount() - 1);
+            this.updateById(post);
+        }
+    }
 }

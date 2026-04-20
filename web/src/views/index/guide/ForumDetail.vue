@@ -78,7 +78,7 @@
           <div class="reply-input-card">
             <a-comment>
               <template #avatar>
-                <a-avatar src="https://joeschmoe.io/api/v1/random" />
+                <a-avatar :src="currentUserAvatar" />
               </template>
               <template #content>
                 <a-form-item>
@@ -143,6 +143,10 @@ import Header from '/@/views/index/components/header.vue'
 import Footer from '/@/views/index/components/footer.vue'
 import { message } from 'ant-design-vue'
 import { getPostDetailApi, getPostListApi } from '/@/api/post'
+import { BASE_URL } from "/@/store/constants"
+
+// 新增：用于存放当前登录用户的头像
+const currentUserAvatar = ref('https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png')
 
 import {
   createPostCommentApi,
@@ -176,6 +180,7 @@ const goBack = () => { router.back() }
 const goToDetail = (id) => { router.push({ name: 'ForumDetail', query: { id: id } }) }
 
 // 获取详情
+// 获取详情
 const fetchDetail = async (id) => {
   try {
     const res = await getPostDetailApi({ id: id })
@@ -186,12 +191,19 @@ const fetchDetail = async (id) => {
       if (data.type === 'ask') { typeClass = 'tag-ask'; tagText = '求助' }
       if (data.type === 'mate') { typeClass = 'tag-mate'; tagText = '结伴' }
 
+      // ✅ 核心修复：处理作者真实头像的路径拼接
+      let avatarUrl = data.authorAvatar || data.userAvatar || data.avatar || '';
+      if (avatarUrl && !avatarUrl.startsWith('http')) {
+        avatarUrl = BASE_URL + '/api/staticfiles/avatar/' + avatarUrl;
+      }
+
       topicDetail.value = {
         type: typeClass,
         tag: tagText,
         title: data.title,
-        avatar: data.authorAvatar || 'https://joeschmoe.io/api/v1/random',
-        // ✅ 核心修复：优先取昵称 -> 用户名 -> 用户ID -> 匿名用户
+        // ✅ 使用拼接好的真实头像，如果没有则使用默认占位图
+        avatar: avatarUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
+        // 优先取昵称 -> 用户名 -> 用户ID -> 匿名用户
         author: data.nickname || data.username || data.authorName || (data.userId ? `用户ID: ${data.userId}` : '匿名用户'),
         time: data.createTime || '刚刚',
         views: data.pv || 0,
@@ -205,6 +217,7 @@ const fetchDetail = async (id) => {
 }
 
 // 获取评论
+// 获取评论
 const fetchComments = async (id) => {
   try {
     const res = await listPostCommentsApi({ postId: id })
@@ -212,21 +225,44 @@ const fetchComments = async (id) => {
       const currentUserId = localStorage.getItem('user_id') || 'guest'
       const likedRecords = JSON.parse(localStorage.getItem(`liked_comments_${currentUserId}`) || '[]')
 
-      replyList.value = res.data.map(item => ({
-        id: item.id,
-        avatar: 'https://joeschmoe.io/api/v1/random',
-        // ✅ 核心修复：评论列表同样也是优先取昵称 -> 用户名 -> 用户ID
-        author: item.nickname || item.username || (item.userId ? `用户ID: ${item.userId}` : '热心网友'),
-        time: item.commentTime || '刚刚',
-        content: item.content,
-        likes: item.likeCount || 0,
-        hasLiked: likedRecords.includes(item.id)
-      }))
+      replyList.value = res.data.map(item => {
+        // ✅ 核心修复 1：处理真实头像路径拼接
+        let avatarUrl = item.avatar || item.userAvatar || item.authorAvatar || '';
+        if (avatarUrl && !avatarUrl.startsWith('http')) {
+          avatarUrl = BASE_URL + '/api/staticfiles/avatar/' + avatarUrl;
+        }
+
+        return {
+          id: item.id,
+          // ✅ 核心修复 2：使用拼接好的真实头像，如果没有则使用国内稳定的占位图
+          avatar: avatarUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
+          author: item.nickname || item.username || (item.userId ? `用户ID: ${item.userId}` : '热心网友'),
+          time: item.commentTime || '刚刚',
+          content: item.content,
+          likes: item.likeCount || 0,
+          hasLiked: likedRecords.includes(item.id)
+        }
+      })
     }
   } catch (error) {
     console.error('获取评论失败', error)
   }
 }
+
+// 页面初始化逻辑
+onMounted(() => {
+  loadPageData()
+
+  // ✅ 核心修复 3：获取当前登录用户的头像，供底部输入框使用
+  const savedAvatar = localStorage.getItem('user_avatar') || localStorage.getItem('avatar');
+  if (savedAvatar) {
+    if (!savedAvatar.startsWith('http')) {
+      currentUserAvatar.value = BASE_URL + '/api/staticfiles/avatar/' + savedAvatar;
+    } else {
+      currentUserAvatar.value = savedAvatar;
+    }
+  }
+})
 
 // 处理评论点赞
 const handleLikeComment = async (comment) => {

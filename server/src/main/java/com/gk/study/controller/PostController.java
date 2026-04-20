@@ -44,6 +44,13 @@ public class PostController {
         try {
             Post post = postService.getById(id);
             if (post != null) {
+                if (post.getUserId() != null) {
+                    com.gk.study.entity.User user = userService.getUserDetail(String.valueOf(post.getUserId()));
+                    if (user != null) {
+                        post.setAuthorName(org.springframework.util.StringUtils.isEmpty(user.getNickname()) ? user.getUsername() : user.getNickname());
+                        post.setAuthorAvatar(user.getAvatar());
+                    }
+                }
                 postService.addPv(id);
                 return new APIResponse(ResponeCode.SUCCESS, "查询成功", post);
             }
@@ -107,5 +114,45 @@ public class PostController {
         File dest = new File(UPLOAD_PATH + newFileName);
         file.transferTo(dest);
         return newFileName;
+    }
+
+    @RequestMapping(value = "/like", method = RequestMethod.POST)
+    public APIResponse like(@RequestParam("id") Long id) {
+        try {
+            postService.likePost(id);
+            return new APIResponse(ResponeCode.SUCCESS, "点赞成功");
+        } catch (Exception e) {
+            return new APIResponse(ResponeCode.FAIL, "点赞报错: " + e.getMessage());
+        }
+    }
+
+    @RequestMapping(value = "/cancelLike", method = RequestMethod.POST)
+    public APIResponse cancelLike(@RequestParam("id") Long id) {
+        try {
+            postService.cancelLikePost(id);
+            return new APIResponse(ResponeCode.SUCCESS, "取消点赞成功");
+        } catch (Exception e) {
+            return new APIResponse(ResponeCode.FAIL, "报错: " + e.getMessage());
+        }
+    }
+
+    @RequestMapping(value = "/collect", method = RequestMethod.POST)
+    public APIResponse collect(@RequestParam("id") Long id) {
+        try {
+            postService.collectPost(id);
+            return new APIResponse(ResponeCode.SUCCESS, "收藏成功");
+        } catch (Exception e) {
+            return new APIResponse(ResponeCode.FAIL, "报错: " + e.getMessage());
+        }
+    }
+
+    @RequestMapping(value = "/cancelCollect", method = RequestMethod.POST)
+    public APIResponse cancelCollect(@RequestParam("id") Long id) {
+        try {
+            postService.cancelCollectPost(id);
+            return new APIResponse(ResponeCode.SUCCESS, "取消收藏成功");
+        } catch (Exception e) {
+            return new APIResponse(ResponeCode.FAIL, "报错: " + e.getMessage());
+        }
     }
 }
