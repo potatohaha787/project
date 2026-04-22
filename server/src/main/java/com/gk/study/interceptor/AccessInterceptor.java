@@ -3,17 +3,13 @@ package com.gk.study.interceptor;
 import com.google.gson.Gson;
 import com.gk.study.common.APIResponse;
 import com.gk.study.common.ResponeCode;
-import com.gk.study.entity.OpLog;
 import com.gk.study.entity.User;
 import com.gk.study.permission.Access;
 import com.gk.study.permission.AccessLevel;
-import com.gk.study.service.OpLogService;
 import com.gk.study.service.UserService;
-import com.gk.study.utils.IpUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.ModelAndView;
@@ -23,26 +19,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
- * 该拦截器有两个用途：1.拦截request记录log 2.接口验权
+ * 该拦截器有两个用途：1.记录请求耗时日志 2.接口验权
  */
 @Component
 public class AccessInterceptor extends HandlerInterceptorAdapter {
 
     private Logger logger = LoggerFactory.getLogger(AccessInterceptor.class);
 
-    private static OpLogService service;
-
     private static UserService userService;
-
-    @Autowired
-    public void setOpLogService( OpLogService service) {
-        // 为解决先@Component 后@Autowired失效的方案
-        AccessInterceptor.service = service;
-    }
 
     @Autowired
     public void setUserService( UserService userService) {
@@ -71,7 +57,6 @@ public class AccessInterceptor extends HandlerInterceptorAdapter {
         // 管理员
         if(access.level().getCode() == AccessLevel.ADMIN.getCode()) {
             String token = request.getHeader("ADMINTOKEN");
-            logger.info("token==>" + token);
             User user = userService.getUserByToken(token);
             if(user != null && user.getRole().equals(String.valueOf(User.AdminUser))){
                 return true;
@@ -85,7 +70,6 @@ public class AccessInterceptor extends HandlerInterceptorAdapter {
         // 用户
         if(access.level().getCode() == AccessLevel.LOGIN.getCode()) {
             String token = request.getHeader("TOKEN");
-            logger.info("token==>" + token);
             User user = userService.getUserByToken(token);
             if(user != null && user.getRole().equals(String.valueOf(User.NormalUser))){
                 return true;
@@ -95,7 +79,6 @@ public class AccessInterceptor extends HandlerInterceptorAdapter {
                 return false;
             }
         }
-
 
         return true;
     }
@@ -107,21 +90,14 @@ public class AccessInterceptor extends HandlerInterceptorAdapter {
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-
-        //**********************记录log代码*************************
+        //**********************记录log代码 (改为控制台打印)*************************
         Long endTime = System.currentTimeMillis();
         Long startTime = (Long) request.getAttribute("_startTime");
-        Long diff = (endTime - startTime);
-
-        OpLog opLog = new OpLog();
-        opLog.setReIp(IpUtils.getIpAddr(request));
-        opLog.setReMethod(request.getMethod());
-        opLog.setReUrl(request.getRequestURI());
-        opLog.setReUa(request.getHeader(HttpHeaders.USER_AGENT));
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        opLog.setReTime(formatter.format(new Date()));
-        opLog.setAccessTime(String.valueOf(diff));
-        service.createOpLog(opLog);
+        if (startTime != null) {
+            Long diff = (endTime - startTime);
+            // 既然不存数据库了，就在后台控制台打印一下请求URL和耗时即可
+            logger.info("请求URL: {} | 耗时: {} ms", request.getRequestURI(), diff);
+        }
     }
 
     public void writeResponse(HttpServletResponse response, APIResponse apiResponse) throws IOException {

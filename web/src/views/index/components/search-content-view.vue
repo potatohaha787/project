@@ -15,7 +15,8 @@
           <div class="things flex-view">
             <div class="thing-item item-column-4" v-for="item in tData.pageData" @click="handleDetail(item)">
               <div class="img-view">
-                <img :src="item.cover"></div>
+                <img :src="item.cover">
+              </div>
               <div class="info-view">
                 <h3 class="thing-name">{{ item.title.substring(0, 12) }}</h3>
                 <span>
@@ -27,7 +28,7 @@
         </a-spin>
         <div class="page-view" style="">
           <a-pagination v-model:value="tData.page" size="small" @change="changePage" :hideOnSinglePage="true"
-                        :defaultPageSize="tData.pageSize" :total="tData.total"/>
+            :defaultPageSize="tData.pageSize" :total="tData.total" />
         </div>
       </div>
     </div>
@@ -35,9 +36,9 @@
 </template>
 
 <script setup>
-import {listApi as listThingList} from '/@/api/thing'
-import {BASE_URL} from "/@/store/constants";
-import {useUserStore} from "/@/store";
+import { listApi as listThingList } from '/@/api/thing'
+import { BASE_URL } from "/@/store/constants";
+import { useUserStore } from "/@/store";
 
 const userStore = useUserStore()
 const router = useRouter();
@@ -61,12 +62,12 @@ onMounted(() => {
 // 监听query参数
 watch(() => route.query, (newPath, oldPath) => {
   search()
-}, {immediate: false});
+}, { immediate: false });
 
 
 const search = () => {
   tData.keyword = route.query.keyword.trim()
-  getThingList({'keyword': tData.keyword})
+  getThingList({ 'keyword': tData.keyword })
 }
 
 // 分页事件
@@ -78,7 +79,7 @@ const changePage = (page) => {
 }
 const handleDetail = (item) => {
   // 跳转新页面
-  let text = router.resolve({name: 'detail', query: {id: item.id}})
+  let text = router.resolve({ name: 'detail', query: { id: item.id } })
   window.open(text.href, '_blank')
 }
 const getThingList = (data) => {
@@ -225,5 +226,4 @@ const getThingList = (data) => {
   color: #0F1111;
   font-size: 14px;
 }
-
 </style>

@@ -91,34 +91,6 @@
             </a-menu-item>
           </a-sub-menu>
 
-          <!-- <a-sub-menu>
-            <template #icon>
-              <folder-outlined />
-            </template>
-             <template #title>日志管理</template>
-            <a-menu-item key="loginLog">
-              <appstore-outlined />
-              <span>登录日志</span>
-            </a-menu-item>
-            <a-menu-item key="opLog">
-              <appstore-outlined />
-              <span>操作日志</span>
-            </a-menu-item>
-            <a-menu-item key="errorLog">
-              <appstore-outlined />
-              <span>错误日志</span>
-            </a-menu-item>
-          </a-sub-menu>
-          
-          <a-menu-item key="overview">
-          <home-outlined />
-           <span>统计分析</span>
-           </a-menu-item>
--->
-          <a-menu-item key="sysInfo">
-            <info-circle-outlined />
-            <span>系统信息</span>
-          </a-menu-item>
         </a-menu>
       </a-layout-sider>
       <a-layout-content :style="{ margin: '16px 16px', minHeight: '200px' }">

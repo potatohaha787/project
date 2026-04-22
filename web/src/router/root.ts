@@ -77,16 +77,6 @@ const constantRouterMap = [
         component: () => import('/@/views/index/guide/guide.vue')
       },
       {
-        path: 'confirm',
-        name: 'confirm',
-        component: () => import('/@/views/index/confirm.vue')
-      },
-      {
-        path: 'pay',
-        name: 'pay',
-        component: () => import('/@/views/index/pay.vue')
-      },
-      {
         path: 'publishGuide',
         name: 'publishGuide',
         component: () => import('/@/views/index/guide/PublishGuide.vue'),
@@ -139,16 +129,6 @@ const constantRouterMap = [
             component: () => import('/@/views/index/user/userinfo-edit-view.vue')
           },
           {
-            path: 'followView',
-            name: 'followView',
-            component: () => import('/@/views/index/user/follow-view.vue')
-          },
-          {
-            path: 'fansView',
-            name: 'fansView',
-            component: () => import('/@/views/index/user/fans-view.vue')
-          },
-          {
             path: 'commentView',
             name: 'commentView',
             component: () => import('/@/views/index/user/comment-view.vue')
@@ -178,7 +158,6 @@ const constantRouterMap = [
     redirect: '/admin/thing',
     component: () => import('/@/views/admin/main.vue'),
     children: [
-      { path: 'overview', name: 'overview', component: () => import('/@/views/admin/overview.vue') },
       { path: 'adminCelebrity', name: 'adminCelebrity', component: () => import('/@/views/admin/celebrity.vue') },
       { path: 'adminHistory', name: 'adminHistory', component: () => import('/@/views/admin/adminHistory.vue') },
       { path: 'thing', name: 'thing', component: () => import('/@/views/admin/thing.vue') },
@@ -190,10 +169,6 @@ const constantRouterMap = [
       { path: 'adminPostComment', name: 'adminPostComment', component: () => import('/@/views/admin/adminPostComment.vue') },
       { path: 'adminPost', name: 'adminPost', component: () => import('/@/views/admin/adminPost.vue') },
       { path: 'notice', name: 'notice', component: () => import('/@/views/admin/notice.vue') },
-      { path: 'loginLog', name: 'loginLog', component: () => import('/@/views/admin/login-log.vue') },
-      { path: 'opLog', name: 'opLog', component: () => import('/@/views/admin/op-log.vue') },
-      { path: 'errorLog', name: 'errorLog', component: () => import('/@/views/admin/error-log.vue') },
-      { path: 'sysInfo', name: 'sysInfo', component: () => import('/@/views/admin/sys-info.vue') },
     ]
   },
 ];

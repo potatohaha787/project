@@ -5,28 +5,19 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gk.study.entity.Classification;
 import com.gk.study.entity.Thing;
-import com.gk.study.entity.ThingTag;
 import com.gk.study.mapper.ClassificationMapper;
 import com.gk.study.mapper.ThingMapper;
-import com.gk.study.mapper.ThingTagMapper;
 import com.gk.study.service.ThingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class ThingServiceImpl extends ServiceImpl<ThingMapper, Thing> implements ThingService {
 
     @Autowired
     ThingMapper mapper;
-
-    @Autowired
-    ThingTagMapper thingTagMapper;
 
     // 注入分类Mapper，用于查询分类名称
     @Autowired
@@ -55,33 +46,9 @@ public class ThingServiceImpl extends ServiceImpl<ThingMapper, Thing> implements
             queryWrapper.eq(true, "classification_id", c);
         }
 
+        // 获取列表直接返回，不再处理已被删除的标签数据
         List<Thing> things = mapper.selectList(queryWrapper);
 
-        // tag筛选
-        if (StringUtils.isNotBlank(tag)) {
-            List<Thing> tThings = new ArrayList<>();
-            QueryWrapper<ThingTag> thingTagQueryWrapper = new QueryWrapper<>();
-            thingTagQueryWrapper.eq("tag_id", tag);
-            List<ThingTag> thingTagList = thingTagMapper.selectList(thingTagQueryWrapper);
-            for (Thing thing : things) {
-                for (ThingTag thingTag : thingTagList) {
-                    if (thing.getId().equals(thingTag.getThingId())) {
-                        tThings.add(thing);
-                    }
-                }
-            }
-            things.clear();
-            things.addAll(tThings);
-        }
-
-        // 附加tag
-        for (Thing thing : things) {
-            QueryWrapper<ThingTag> thingTagQueryWrapper = new QueryWrapper<>();
-            thingTagQueryWrapper.lambda().eq(ThingTag::getThingId, thing.getId());
-            List<ThingTag> thingTags = thingTagMapper.selectList(thingTagQueryWrapper);
-            List<Long> tags = thingTags.stream().map(ThingTag::getTagId).collect(Collectors.toList());
-            thing.setTags(tags);
-        }
         return things;
     }
 
@@ -100,8 +67,6 @@ public class ThingServiceImpl extends ServiceImpl<ThingMapper, Thing> implements
             thing.setWishCount("0");
         }
         mapper.insert(thing);
-        // 更新tag
-        setThingTags(thing);
     }
 
     @Override
@@ -111,10 +76,6 @@ public class ThingServiceImpl extends ServiceImpl<ThingMapper, Thing> implements
 
     @Override
     public void updateThing(Thing thing) {
-
-        // 更新tag
-        setThingTags(thing);
-
         mapper.updateById(thing);
     }
 
@@ -139,31 +100,19 @@ public class ThingServiceImpl extends ServiceImpl<ThingMapper, Thing> implements
     @Override
     public void addWishCount(String thingId) {
         Thing thing = mapper.selectById(thingId);
-        thing.setWishCount(String.valueOf(Integer.parseInt(thing.getWishCount()) + 1));
-        mapper.updateById(thing);
+        if(thing != null && thing.getWishCount() != null){
+            thing.setWishCount(String.valueOf(Integer.parseInt(thing.getWishCount()) + 1));
+            mapper.updateById(thing);
+        }
     }
 
     // 收藏数加1
     @Override
     public void addCollectCount(String thingId) {
         Thing thing = mapper.selectById(thingId);
-        thing.setCollectCount(String.valueOf(Integer.parseInt(thing.getCollectCount()) + 1));
-        mapper.updateById(thing);
-    }
-
-    public void setThingTags(Thing thing) {
-        // 删除tag
-        Map<String, Object> map = new HashMap<>();
-        map.put("thing_id", thing.getId());
-        thingTagMapper.deleteByMap(map);
-        // 新增tag
-        if (thing.getTags() != null) {
-            for (Long tag : thing.getTags()) {
-                ThingTag thingTag = new ThingTag();
-                thingTag.setThingId(thing.getId());
-                thingTag.setTagId(tag);
-                thingTagMapper.insert(thingTag);
-            }
+        if(thing != null && thing.getCollectCount() != null){
+            thing.setCollectCount(String.valueOf(Integer.parseInt(thing.getCollectCount()) + 1));
+            mapper.updateById(thing);
         }
     }
 
