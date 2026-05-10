@@ -251,7 +251,13 @@ const goToDetail = (id) => {
       color: #666;
       line-height: 1.6;
       margin-bottom: 20px;
-      height: 44px;
+      height: auto; // 取消固定高度，让内容根据行数自适应
+      display: -webkit-box; // 必须结合 box 使用
+      -webkit-box-orient: vertical; // 设置伸缩盒子的子元素排列方式
+      -webkit-line-clamp: 3; // 限制显示的行数
+      overflow: hidden; // 超出部分隐藏
+      text-overflow: ellipsis; // 溢出显示省略号
+      word-break: break-all;
     }
 
     .card-bottom {
