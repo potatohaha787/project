@@ -49,7 +49,7 @@
 
           <div class="form-footer">
             <a @click="handleCreateUser" class="link-btn">注册新账号</a>
-            <a class="link-btn">忘记密码？</a>
+            <router-link to="/adminLogin" class="link-btn">管理员登录</router-link>
           </div>
         </div>
       </div>
@@ -179,7 +179,6 @@ const loginSuccess = () => {
     width: 64px;
     height: 64px;
     margin-bottom: 32px;
-    /* 移除了导致图标变成纯白色的 filter 和鼠标小手样式 */
   }
 
   .brand-title {
@@ -285,7 +284,6 @@ const loginSuccess = () => {
     margin-right: 12px;
 
     .input-icon {
-      /* 调大了尺寸，并去掉了半透明设置，确保图标清晰 */
       width: 24px;
     }
   }
@@ -346,6 +344,8 @@ const loginSuccess = () => {
     color: @text-light;
     cursor: pointer;
     transition: color 0.3s;
+    text-decoration: none;
+    /* 去除可能出现的下划线 */
 
     &:hover {
       color: @zs-yellow;

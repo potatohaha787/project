@@ -125,6 +125,7 @@ const goHeritageDetail = (id) => {
 @vermilion: #bc332a;
 /* 朱砂红 */
 @accent-color: #c5b596;
+#c59d5f
 /* 古铜金 */
 
 .heritage-portal {
